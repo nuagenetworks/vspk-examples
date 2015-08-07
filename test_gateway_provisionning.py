@@ -1,7 +1,7 @@
-import vsdk
+from vspk.vsdk import v3_2 as vsdk
 
 import logging
-from vsdk.utils import set_log_level
+from vspk.vsdk.v3_2.utils import set_log_level
 # 'Setting a log level to see what happens (Optionnal)'
 set_log_level(logging.INFO)
 

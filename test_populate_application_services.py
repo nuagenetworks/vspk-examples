@@ -1,6 +1,6 @@
 import requests
 import csv
-import vsdk
+from vspk.vsdk import v3_2 as vsdk
 
 def import_known_application_services(session):
 

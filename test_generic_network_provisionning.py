@@ -1,4 +1,4 @@
-import vsdk
+from vspk.vsdk import v3_2 as vsdk
 import ipaddress
 
 def populate_test_domain(domain, number_of_zones, number_of_subnets_per_zone, number_of_vports_per_subnet):
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     session.start()
 
     # get a domain
-    domain = vsdk.NUDomain(id="dd960a1f-b555-4e6c-9bf5-f88832679b5e")
+    domain = vsdk.NUDomain(id="97c9ffac-c007-4cef-bb38-69aa91f7c258")
     domain.fetch()
 
     # do the job
