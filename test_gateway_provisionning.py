@@ -73,7 +73,7 @@ def create_datacenter_gateway(name, system_id, gateway_template, enterprise, vsd
 if __name__ == "__main__":
 
     # start the session
-    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.88:8443')
+    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.46:8443')
     session.start()
 
     # get an enterprise

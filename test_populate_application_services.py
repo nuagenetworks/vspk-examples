@@ -37,7 +37,7 @@ def import_known_application_services(session):
 
 if __name__ == "__main__":
 
-    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.88:8443')
+    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.46:8443')
     session.start()
     import_known_application_services(session)
 

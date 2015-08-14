@@ -8,7 +8,7 @@ from vspk.vsdk.v3_2.utils import set_log_level
 
 
 # Create a session for CSPRoot
-session = NUVSDSession(username=u'csproot', password=u'csproot', enterprise=u'csp', api_url=u'https://135.227.222.88:8443')
+session = NUVSDSession(username=u'csproot', password=u'csproot', enterprise=u'csp', api_url=u'https://135.227.222.46:8443')
 
 # Start using the CSPRoot session
 session.start()

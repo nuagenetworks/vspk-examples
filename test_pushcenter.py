@@ -11,11 +11,10 @@ from vspk.vsdk.v3_2.utils import set_log_level
 
 from bambou.exceptions import BambouHTTPError
 
-set_log_level(logging.INFO)
+set_log_level(logging.ERROR)
 
 
 def did_receive_push(data):
-    raise Exception('Waaaaaaaaah')
     import pprint
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(data);
@@ -23,8 +22,11 @@ def did_receive_push(data):
 
 if __name__ == '__main__':
 
+    import sys
+    sys.setrecursionlimit(50)
+
     # create a user session for user csproot
-    session = NUVSDSession(username="csproot", password="csproot", enterprise="csp", api_url="https://135.227.222.88:8443")
+    session = NUVSDSession(username="csproot", password="csproot", enterprise="csp", api_url="https://135.227.222.46:8443")
 
     # start the session
     # now session contains a push center and the connected user

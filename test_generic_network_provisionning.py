@@ -55,7 +55,7 @@ def populate_test_domain(domain, number_of_zones, number_of_subnets_per_zone, nu
 
 if __name__ == "__main__":
 
-    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.88:8443')
+    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.46:8443')
     session.start()
 
     # get a domain
