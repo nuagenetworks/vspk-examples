@@ -10,9 +10,11 @@ from vspk.vsdk.v3_2 import *
 if __name__ == '__main__':
 
     # Connection with a certificate
-    cert = ("/Users/chserafi/Desktop/keys/vns.pem", "/Users/chserafi/Desktop/keys/vns-Key.pem")
+    cert = ("./keys/vns.pem", ".//keys/vns-Key.pem")
     session = NUVSDSession(username='vns', enterprise='csp', api_url='https://135.227.222.46:7443', certificate=cert)
     session.start()
+
+    # Reset the session to start a new one
     session.reset()
 
     # Connection with a user/password

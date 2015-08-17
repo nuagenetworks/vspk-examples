@@ -1,6 +1,7 @@
 from vspk.vsdk import v3_2 as vsdk
 import ipaddress
 
+
 def populate_test_domain(domain, number_of_zones, number_of_subnets_per_zone, number_of_vports_per_subnet):
     """ Populate a domain with test data
 

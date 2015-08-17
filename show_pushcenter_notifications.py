@@ -9,15 +9,15 @@ from time import sleep
 from vspk.vsdk.v3_2 import *
 from vspk.vsdk.v3_2.utils import set_log_level
 
-from bambou.exceptions import BambouHTTPError
-
 set_log_level(logging.ERROR)
 
 
 def did_receive_push(data):
+    """ Receive delegate
+    """
     import pprint
     pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(data);
+    pp.pprint(data)
 
 
 if __name__ == '__main__':
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     push_center = session.push_center
 
     # we register our delegate that will be called on each event
-    push_center.add_delegate(did_receive_push);
+    push_center.add_delegate(did_receive_push)
 
     # and we start it
     push_center.start()

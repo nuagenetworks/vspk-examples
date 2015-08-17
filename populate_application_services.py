@@ -2,10 +2,10 @@ import requests
 import csv
 from vspk.vsdk import v3_2 as vsdk
 
+
 def import_known_application_services(session):
-
-    # pip install requests
-
+    """
+    """
     protocols = requests.get('http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.csv').content
     csvreader = csv.reader(protocols.split('\r\n'))
 
@@ -24,7 +24,7 @@ def import_known_application_services(session):
             name = "%s - %s - %s " % (proto, port_number, row[0])
 
             if not name:
-                continue;
+                continue
 
             appservice = vsdk.NUApplicationService(name=name, protocol=proto, destination_port=port_number, description=desc, direction="REFLEXIVE",\
                                                    ether_type="0x0800", source_port="*", dscp="*")
@@ -32,7 +32,7 @@ def import_known_application_services(session):
             session.user.create_child(appservice)
 
         except Exception as ex:
-            print ex;
+            print ex
 
 
 if __name__ == "__main__":

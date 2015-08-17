@@ -2,8 +2,9 @@ from vspk.vsdk import v3_2 as vsdk
 
 import logging
 from vspk.vsdk.v3_2.utils import set_log_level
-# 'Setting a log level to see what happens (Optionnal)'
+
 set_log_level(logging.INFO)
+
 
 def create_datacenter_gateway_template(name, personality, network_port_names, access_port_names, vlan_range, vlans_values, vsdsession, description=None):
     """ Creates a DC Gateway template
@@ -32,7 +33,6 @@ def create_datacenter_gateway_template(name, personality, network_port_names, ac
 
         network_port_template = vsdk.NUPortTemplate(name=network_port_name, physical_name=network_port_name, port_type="NETWORK")
         gateway_template.create_child(network_port_template)
-
 
     # create an access port for each given access_port_names
     for access_port_name in access_port_names:
