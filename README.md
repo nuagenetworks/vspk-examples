@@ -1,4 +1,2 @@
-vspk-examples
-=============
-
-A set of examples using vspk. Also used to test if everything's working fine!
+# vspk-examples
+A set of VSPK examples to learn how to use Nuage Networks' SDK
