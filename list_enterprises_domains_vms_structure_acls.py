@@ -32,5 +32,6 @@ for cur_ent in user.enterprises.get():
         for cur_acl in cur_domain.egress_acl_templates.get():
             print('    |- Egress ACL: %s' % cur_acl.name)
             for cur_rule in cur_acl.egress_acl_entry_templates.get():
+                print('        |- Rule: %s' % cur_rule.description)
 
     print('--------------------------------------------------------------------------------')
