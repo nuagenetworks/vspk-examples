@@ -24,12 +24,12 @@ for cur_ent in user.enterprises.get():
             for cur_subnet in cur_domain.subnets.get():
                 print('        |- Subnets: %s - %s - %s' % (cur_subnet.name,cur_subnet.address,cur_subnet.netmask))
 
-        for cur_acl in domain.ingress_acl_templates.get():
+        for cur_acl in cur_domain.ingress_acl_templates.get():
             print('    |- Ingress ACL: %s' % cur_acl.name)
             for cur_rule in cur_acl.ingress_acl_entry_templates.get():
                 print('        |- Rule: %s' % cur_rule.description)
 
-        for cur_acl in domain.egress_acl_templates.get():
+        for cur_acl in cur_domain.egress_acl_templates.get():
             print('    |- Egress ACL: %s' % cur_acl.name)
             for cur_rule in cur_acl.egress_acl_entry_templates.get():
 
