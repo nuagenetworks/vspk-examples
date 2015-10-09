@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 vcin_vdt_configure_from_vsphere is a script which will configure the full vCenter tree of Datacenters, Clusters and Hosts into the Nuage vCenter Integration Node and the Nuage vCenter Deployment Tool. It is also capable of configuring the ESXi hosts with the correct Agent VM settings.
 
@@ -115,7 +116,7 @@ import socket
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
-from vspk.vsdk import v3_2 as vsdk
+from vspk import v3_2 as vsdk
 
 def get_args():
     """
@@ -176,7 +177,7 @@ def handle_vdt_datacenter(logger, nc, vc, nuage_vcenter, vc_dc, nc_dc_list, vcen
     # Getting clusters in the current vCenter Datacenter
     logger.debug('Gathering all Clusters from the vCenter Datacenter %s' % vc_dc.name)
     content = vc.content
-    obj_view = content.viewManager.CreateContainerView(vc_dc,[vim.ClusterComputeResource],True)
+    obj_view = content.viewManager.CreateContainerView(vc_dc, [vim.ClusterComputeResource], True)
     vc_cl_list = obj_view.view
     obj_view.Destroy()
 
@@ -210,7 +211,7 @@ def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_h
     # Getting hosts in the current vCenter Cluster
     logger.debug('Gathering all Hosts from the vCenter Cluster %s' % vc_cl.name)
     content = vc.content
-    obj_view = content.viewManager.CreateContainerView(vc_cl,[vim.HostSystem],True)
+    obj_view = content.viewManager.CreateContainerView(vc_cl, [vim.HostSystem], True)
     vc_host_list = obj_view.view
     obj_view.Destroy()
 
@@ -223,7 +224,7 @@ def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_h
             # Determining Host management IP
             vc_host_ip = None
             for vnic in vc_host.config.network.vnic:
-                logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name,vc_cl.name))
+                logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name, vc_cl.name))
                 if ip_address_is_valid(vnic.spec.ip.ipAddress):
                     logger.debug('Found management IP %s for vCenter Host %s' % (vnic.spec.ip.ipAddress, vc_host.name))
                     vc_host_ip = vnic.spec.ip.ipAddress
@@ -574,7 +575,7 @@ def main():
     else:
         log_level = logging.WARNING
 
-    logging.basicConfig(filename=log_file,format='%(asctime)s %(levelname)s %(message)s',level=log_level)
+    logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
     # Input checking
@@ -615,8 +616,8 @@ def main():
             logger.critical('CSV file %s does not exist, exiting' % hosts_file)
             return 1
 
-        with open(hosts_file,'rb') as hostlist:
-            hosts_list_raw = csv.reader(hostlist,delimiter=',',quotechar='"')
+        with open(hosts_file, 'rb') as hostlist:
+            hosts_list_raw = csv.reader(hostlist, delimiter=',', quotechar='"')
             for row in hosts_list_raw:
                 logger.debug('Found CSV row: %s' % ','.join(row))
                 # Adding IP to the hosts variable so it can also be used in further handling if it's a valid IP
@@ -637,17 +638,17 @@ def main():
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
-        nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host,nuage_username))
+        nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host, nuage_username))
 
     # Getting user password for vCenter connection
     if vcenter_password is None:
         logger.debug('No command line vCenter password received, requesting vCenter password from user')
-        vcenter_password = getpass.getpass(prompt='Enter password for vCenter host %s for user %s: ' % (vcenter_host,vcenter_username))
+        vcenter_password = getpass.getpass(prompt='Enter password for vCenter host %s for user %s: ' % (vcenter_host, vcenter_username))
 
     # Getting user password for hosts
     if hv_password is None:
         logger.debug('No command line Host password received, requesting Host password from user')
-        hv_password = getpass.getpass(prompt='Enter password for the hosts inside vCenter %s for user %s: ' % (vcenter_host,hv_username))
+        hv_password = getpass.getpass(prompt='Enter password for the hosts inside vCenter %s for user %s: ' % (vcenter_host, hv_username))
 
     try:
         vc = None
@@ -655,25 +656,25 @@ def main():
 
         # Connecting to Nuage 
         try:
-            logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host,nuage_port,nuage_username))
-            nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host,nuage_port))
+            logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
+            nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
             nc.start()
         except IOError, e:
             pass
 
         if not nc or not nc.is_current_session():
-            logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host,nuage_username))
+            logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
             return 1
 
         # Connecting to vCenter
         try:
-            logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host,vcenter_https_port,vcenter_username))
-            vc = SmartConnect(host=vcenter_host,user=vcenter_username,pwd=vcenter_password,port=int(vcenter_https_port))
+            logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_https_port, vcenter_username))
+            vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port))
         except IOError, e:
             pass
 
         if not vc:
-            logger.error('Could not connect to vCenter host %s with user %s and specified password' % (vcenter_host,vcenter_username))
+            logger.error('Could not connect to vCenter host %s with user %s and specified password' % (vcenter_host, vcenter_username))
             return 1
 
         logger.info('Connected to both Nuage & vCenter servers')
@@ -698,7 +699,7 @@ def main():
         # Gathering all Datacenters inside the vCenter
         logger.debug('Gathering all Datacenters from vCenter')
         content = vc.content
-        obj_view = content.viewManager.CreateContainerView(content.rootFolder,[vim.Datacenter],True)
+        obj_view = content.viewManager.CreateContainerView(content.rootFolder, [vim.Datacenter], True)
         vc_dc_list = obj_view.view
         obj_view.Destroy()
 
@@ -727,3 +728,4 @@ def main():
 # Start program
 if __name__ == "__main__":
     main()
+

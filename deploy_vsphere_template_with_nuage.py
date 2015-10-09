@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 deploy_vsphere_template_with_nuage is a script which allows you to deploy (or clone) a VM template (or VM) and connect it to a Nuage VSP subnet.
 
@@ -16,14 +17,15 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Examples ---
 ---- Deploy a template in a given Resource Pool and Folder, with given Nuage VM metadata and a fixed IP ----
-python deploy-template-with-nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root -r Pool -f Folder --nuage-vm-enterprise VMware-Integration --nuage-vm-domain Main --nuage-vm-zone "Zone 1" --nuage-vm-subnet "Subnet 0" --nuage-vm-ip 10.0.0.123 --nuage-vm-user vmwadmin
+python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root -r Pool -f Folder --nuage-vm-enterprise VMware-Integration --nuage-vm-domain Main --nuage-vm-zone "Zone 1" --nuage-vm-subnet "Subnet 0" --nuage-vm-ip 10.0.0.123 --nuage-vm-user vmwadmin
 
 ---- Deploy a template, for the Nuage VM metadata show menus to select values from ----
-python deploy-template-with-nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root 
+python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root 
 """
 import argparse
 import atexit
 import getpass
+import ipaddress
 import logging
 import os.path
 import requests
@@ -34,7 +36,7 @@ import sys
 from time import sleep
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
-from vspk.vsdk import v3_2 as vsdk
+from vspk import v3_2 as vsdk
 
 def get_args():
     """
@@ -70,41 +72,21 @@ def get_args():
     args = parser.parse_args()
     return args
 
-def cls(logger):
+def clear(logger):
     """
     Clears the terminal
     """
     if logger:
         logger.debug('Clearing terminal')
-    os.system(['clear','cls'][os.name == 'nt'])
+    os.system(['clear', 'cls'][os.name == 'nt'])
 
-def calc_cidrmask(netmask,logger):
-    """
-    Calculate the CIDR mask for a given octet netmask
-    """
-    if logger:
-        logger.debug('Calculating cidr mask for netmask %s' % netmask)
-    return sum([bin(int(x)).count('1') for x in netmask.split('.')])
-
-def ip_in_subnet(ip,net_n_bits,logger):
-   """
-   Check if an IP is inside a net using CIDR notation
-   """
-   if logger:
-        logger.debug('Checking if IP %s is inside subnet %s' % (ip,net_n_bits))
-   ipaddr = struct.unpack('<L', socket.inet_aton(ip))[0]
-   net, bits = net_n_bits.split('/')
-   netaddr = struct.unpack('<L', socket.inet_aton(net))[0]
-   netmask = ((1L << int(bits)) - 1)
-   return ipaddr & netmask == netaddr & netmask
-
-def find_vm(vc,logger,name):
+def find_vm(vc, logger, name):
     """
     Find a virtual machine by its name and return it
     """
 
     content = vc.content
-    obj_view = content.viewManager.CreateContainerView(content.rootFolder,[vim.VirtualMachine],True)
+    obj_view = content.viewManager.CreateContainerView(content.rootFolder, [vim.VirtualMachine], True)
     vm_list = obj_view.view
 
     for vm in vm_list:
@@ -114,13 +96,13 @@ def find_vm(vc,logger,name):
             return vm
     return None
 
-def find_resource_pool(vc,logger,name):
+def find_resource_pool(vc, logger, name):
     """
     Find a resource pool by its name and return it
     """
 
     content = vc.content
-    obj_view = content.viewManager.CreateContainerView(content.rootFolder,[vim.ResourcePool],True)
+    obj_view = content.viewManager.CreateContainerView(content.rootFolder, [vim.ResourcePool], True)
     rp_list = obj_view.view
 
     for rp in rp_list:
@@ -130,13 +112,13 @@ def find_resource_pool(vc,logger,name):
             return rp
     return None
 
-def find_folder(vc,logger,name):
+def find_folder(vc, logger, name):
     """
     Find a folder by its name and return it
     """
 
     content = vc.content
-    obj_view = content.viewManager.CreateContainerView(content.rootFolder,[vim.Folder],True)
+    obj_view = content.viewManager.CreateContainerView(content.rootFolder, [vim.Folder], True)
     folder_list = obj_view.view
 
     for folder in folder_list:
@@ -144,66 +126,6 @@ def find_folder(vc,logger,name):
         if folder.name == name:
             logger.debug('Found folder %s' % folder.name)
             return folder
-    return None
-
-def find_enterprise(nc,logger,name):
-    """
-    Find a Nuage enterprise inside Nuage VSP by its name and return it
-    """
-
-    for cur_ent in nc.user.enterprises.get():
-        logger.debug('Checking Nuage enterprise %s' % cur_ent.name)
-        if cur_ent.name == name:
-            logger.debug('Found Nuage enterprise %s' % name)
-            return cur_ent
-    return None
-
-def find_user(enterprise,logger,name):
-    """
-    Find a Nuage user inside a Nuage enterprise by its name and return it
-    """
-
-    for cur_user in enterprise.users.get():
-        logger.debug('Checking Nuage user %s' % cur_user.user_name)
-        if cur_user.user_name == name:
-            logger.debug('Found Nuage user %s' % name)
-            return cur_user
-    return None
-
-def find_domain(enterprise,logger,name):
-    """
-    Find a Nuage domain inside a Nuage enterprise by its name and return it
-    """
-
-    for cur_domain in enterprise.domains.get():
-        logger.debug('Checking Nuage domain %s' % cur_domain.name)
-        if cur_domain.name == name:
-            logger.debug('Found Nuage domain %s' % name)
-            return cur_domain
-    return None
-
-def find_zone(domain,logger,name):
-    """
-    Find a Nuage zone inside a Nuage domain by its name and return it
-    """
-
-    for cur_zone in domain.zones.get():
-        logger.debug('Checking Nuage zone %s' % cur_zone.name)
-        if cur_zone.name == name:
-            logger.debug('Found Nuage zone %s' % name)
-            return cur_zone
-    return None
-
-def find_subnet(zone,logger,name):
-    """
-    Find a Nuage subnet inside a Nuage zone by its name and return it
-    """
-
-    for cur_subnet in zone.subnets.get():
-        logger.debug('Checking Nuage subnet %s' % cur_subnet.name)
-        if cur_subnet.name == name:
-            logger.debug('Found Nuage subnet %s' % name)
-            return cur_subnet
     return None
 
 def main():
@@ -268,7 +190,7 @@ def main():
     else:
         log_level = logging.WARNING
 
-    logging.basicConfig(filename=log_file,format='%(asctime)s %(levelname)s %(message)s',level=log_level)
+    logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
     # Disabling SSL verification if set
@@ -282,12 +204,12 @@ def main():
      # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
-        nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host,nuage_username))
+        nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host, nuage_username))
 
     # Getting user password for vCenter connection
     if vcenter_password is None:
         logger.debug('No command line vCenter password received, requesting vCenter password from user')
-        vcenter_password = getpass.getpass(prompt='Enter password for vCenter host %s for user %s: ' % (vcenter_host,vcenter_username))
+        vcenter_password = getpass.getpass(prompt='Enter password for vCenter host %s for user %s: ' % (vcenter_host, vcenter_username))
 
     try:
         vc = None
@@ -295,25 +217,25 @@ def main():
 
         # Connecting to Nuage 
         try:
-            logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host,nuage_port,nuage_username))
-            nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host,nuage_port))
+            logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
+            nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
             nc.start()
         except IOError, e:
             pass
 
         if not nc or not nc.is_current_session():
-            logger.error('Could not connect to Nuage host %s with user %s, enterprise %s and specified password' % (nuage_host,nuage_username,nuage_enterprise))
+            logger.error('Could not connect to Nuage host %s with user %s, enterprise %s and specified password' % (nuage_host, nuage_username, nuage_enterprise))
             return 1
 
         # Connecting to vCenter
         try:
-            logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host,vcenter_port,vcenter_username))
-            vc = SmartConnect(host=vcenter_host,user=vcenter_username,pwd=vcenter_password,port=int(vcenter_port))
+            logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_port, vcenter_username))
+            vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port))
         except IOError, e:
             pass
 
         if not vc:
-            logger.error('Could not connect to vCenter host %s with user %s and specified password' % (vcenter_host,vcenter_username))
+            logger.error('Could not connect to vCenter host %s with user %s and specified password' % (vcenter_host, vcenter_username))
             return 1
 
         logger.info('Connected to both Nuage & vCenter servers')
@@ -324,18 +246,18 @@ def main():
         # Verifying the Nuage Enterprise existence or selecting it
         if nuage_vm_enterprise:
             logger.debug('Finding Nuage enterprise %s' % nuage_vm_enterprise)
-            vm_enterprise = find_enterprise(nc,logger,nuage_vm_enterprise)
+            vm_enterprise = nc.user.enterprises.get_first(filter="name == '%s'"  % nuage_vm_enterprise)
             if vm_enterprise is None:
                 logger.error('Unable to find Nuage enterprise %s' % nuage_vm_enterprise)
                 return 1
             logger.info('Nuage enterprise %s found' % nuage_vm_enterprise)
         else:
-            cls(logger)
+            clear(logger)
             print('Please select your enterprise:')
             index = 0
             all_ent = nc.user.enterprises.get()
             for cur_ent in all_ent:
-                print('%s. %s' % (index+1,cur_ent.name))
+                print('%s. %s' % (index+1, cur_ent.name))
                 index += 1
             vm_enterprise = None
             while vm_enterprise is None:
@@ -349,20 +271,20 @@ def main():
         # Verifying the Nuage User existence or selecting it
         if nuage_vm_user:
             logger.debug('Finding Nuage user %s' % nuage_vm_user)
-            vm_user = find_user(vm_enterprise,logger,nuage_vm_user)
+            vm_user = vm_enterprise.users.get_first(filter="userName == '%s'"  % nuage_vm_user)
             if vm_user is None:
                 logger.error('Unable to find Nuage user %s' % nuage_vm_user)
                 return 1
             logger.info('Nuage user %s found' % nuage_vm_user)
         else:
-            cls(logger)
+            clear(logger)
             print('Enterprise: %s' % vm_enterprise.name)
             print(80 * '-')
             print('Please select your user:')
             index = 0
             all_users = vm_enterprise.users.get()
             for cur_user in all_users:
-                print('%s. %s' % (index+1,cur_user.user_name))
+                print('%s. %s' % (index+1, cur_user.user_name))
                 index += 1
             vm_user = None
             while vm_user is None:
@@ -376,13 +298,13 @@ def main():
         # Verifying the Nuage Domain existence or selecting it
         if nuage_vm_domain:
             logger.debug('Finding Nuage domain %s' % nuage_vm_domain)
-            vm_domain = find_domain(vm_enterprise,logger,nuage_vm_domain)
+            vm_domain = vm_enterprise.domains.get_first(filter="name == '%s'" % nuage_vm_domain)
             if vm_domain is None:
                 logger.error('Unable to find Nuage domain %s' % nuage_vm_domain)
                 return 1
             logger.info('Nuage domain %s found' % nuage_vm_domain)
         else:
-            cls(logger)
+            clear(logger)
             print('Enterprise: %s' % vm_enterprise.name)
             print('User: %s' % vm_user.user_name)
             print(80 * '-')
@@ -390,7 +312,7 @@ def main():
             index = 0
             all_dom = vm_enterprise.domains.get()
             for cur_dom in all_dom:
-                print('%s. %s' % (index+1,cur_dom.name))
+                print('%s. %s' % (index+1, cur_dom.name))
                 index += 1
             vm_domain = None
             while vm_domain is None:
@@ -404,13 +326,13 @@ def main():
         # Verifying the Nuage Zone existence or selecting it
         if nuage_vm_zone:
             logger.debug('Finding Nuage zone %s' % nuage_vm_zone)
-            vm_zone = find_zone(vm_domain,logger,nuage_vm_zone)
+            vm_zone = vm_domain.zones.get_first(filter="name == '%s'" % nuage_vm_zone)
             if vm_zone is None:
                 logger.error('Unable to find Nuage zone %s' % nuage_vm_zone)
                 return 1
             logger.info('Nuage zone %s found' % nuage_vm_zone)
         else:
-            cls(logger)
+            clear(logger)
             print('Enterprise: %s' % vm_enterprise.name)
             print('User: %s' % vm_user.user_name)
             print('Domain: %s' % vm_domain.name)
@@ -419,7 +341,7 @@ def main():
             index = 0
             all_zone = vm_domain.zones.get()
             for cur_zone in all_zone:
-                print('%s. %s' % (index+1,cur_zone.name))
+                print('%s. %s' % (index+1, cur_zone.name))
                 index += 1
             vm_zone = None
             while vm_zone is None:
@@ -433,13 +355,13 @@ def main():
         # Verifying the Nuage Subnet existence or selecting it
         if nuage_vm_subnet:
             logger.debug('Finding Nuage subnet %s' % nuage_vm_subnet)
-            vm_subnet = find_subnet(vm_zone,logger,nuage_vm_subnet)
-            if vm_zone is None:
+            vm_subnet = vm_zone.subnets.get_first(filter="name == '%s'" % nuage_vm_subnet)
+            if vm_subnet is None:
                 logger.error('Unable to find Nuage subnet %s' % nuage_vm_subnet)
                 return 1
             logger.info('Nuage subnet %s found' % nuage_vm_subnet)
         else:
-            cls(logger)
+            clear(logger)
             print('Enterprise: %s' % vm_enterprise.name)
             print('User: %s' % vm_user.user_name)
             print('Domain: %s' % vm_domain.name)
@@ -449,7 +371,7 @@ def main():
             index = 0
             all_subnet = vm_zone.subnets.get()
             for cur_subnet in all_subnet:
-                print('%s. %s - %s/%s' % (index+1,cur_subnet.name,cur_subnet.address,calc_cidrmask(cur_subnet.netmask,logger)))
+                print('%s. %s - %s/%s' % (index+1, cur_subnet.name, cur_subnet.address, cur_subnet.netmask))
                 index += 1
             vm_subnet = None
             while vm_subnet is None:
@@ -461,26 +383,25 @@ def main():
                 print('Invalid choice, please try again')
 
         # Verifying the IP or asking for it
-        subnet_details = "%s/%s" % (vm_subnet.address,calc_cidrmask(vm_subnet.netmask,logger))
         if nuage_vm_ip:
-            logger.debug('Verifying if IP %s is inside Nuage subnet %s range' % (nuage_vm_ip,vm_subnet.name))
-            if not ip_in_subnet(nuage_vm_ip, subnet_details, logger):
-                logger.error('IP %s is not part of subnet %s with netmask %s' % (nuage_vm_ip,vm_subnet.address,vm_subnet.netmask))
+            logger.debug('Verifying if IP %s is inside Nuage subnet %s range' % (nuage_vm_ip, vm_subnet.name))
+            if not ipaddress.ip_address(nuage_vm_ip) in ipaddress.ip_network('%s/%s' % (vm_subnet.address, vm_subnet.netmask)):
+                logger.error('IP %s is not part of subnet %s with netmask %s' % (nuage_vm_ip, vm_subnet.address, vm_subnet.netmask))
                 return 1
             vm_ip = nuage_vm_ip
         else:
-            cls(logger)
+            clear(logger)
             print('Enterprise: %s' % vm_enterprise.name)
             print('User: %s' % vm_user.user_name)
             print('Domain: %s' % vm_domain.name)
             print('Zone: %s' % vm_zone.name)
-            print('Subnet: %s - %s/%s' % (vm_subnet.name,vm_subnet.address,calc_cidrmask(vm_subnet.netmask,logger)))
+            print('Subnet: %s - %s/%s' % (vm_subnet.name, vm_subnet.address, vm_subnet.netmask))
             print(80 * '-')
             print('If you want a static IP, please enter it. Or press enter for a DHCP assigned IP.')
             vm_ip = None
             while vm_ip is None:
                 choice = raw_input('Please enter the IP or press enter for a DHCP assigned IP: ')
-                if not choice or ip_in_subnet(choice, subnet_details, logger):
+                if not choice or ipaddress.ip_address(choice) in ipaddress.ip_network('%s/%s' % (vm_subnet.address, vm_subnet.netmask)):
                     vm_ip = choice
                     break
                 print('Invalid choice, please try again')
@@ -490,13 +411,13 @@ def main():
         logger.info('User: %s' % vm_user.user_name)
         logger.info('Domain: %s' % vm_domain.name)
         logger.info('Zone: %s' % vm_zone.name)
-        logger.info('Subnet: %s - %s/%s' % (vm_subnet.name,vm_subnet.address,calc_cidrmask(vm_subnet.netmask,logger)))
+        logger.info('Subnet: %s - %s/%s' % (vm_subnet.name, vm_subnet.address, vm_subnet.netmask))
         if vm_ip:
             logger.info('Static IP: %s' % vm_ip)
 
         # Find the correct VM
         logger.debug('Finding template %s' % template)
-        template_vm = find_vm(vc,logger,template)
+        template_vm = find_vm(vc, logger, template)
         if template_vm is None:
             logger.error('Unable to find template %s' % template)
             return 1
@@ -506,7 +427,7 @@ def main():
         resource_pool = None
         if resource_pool_name is not None:
             logger.debug('Finding resource pool %s' % resource_pool_name)
-            resource_pool = find_resource_pool(vc,logger,resource_pool_name)
+            resource_pool = find_resource_pool(vc, logger, resource_pool_name)
             if resource_pool is None:
                 logger.critical('Unable to find resource pool %s' % resource_pool_name)
                 return 1
@@ -516,7 +437,7 @@ def main():
         folder = None
         if folder_name is not None:
             logger.debug('Finding folder %s' % folder_name)
-            folder = find_folder(vc,logger,folder_name)
+            folder = find_folder(vc, logger, folder_name)
             if folder is None:
                 logger.critical('Unable to find folder %s' % folder_name)
                 return 1
@@ -535,18 +456,18 @@ def main():
             relocate_spec = vim.vm.RelocateSpec()
 
         logger.debug('Creating clone spec')
-        clone_spec = vim.vm.CloneSpec(powerOn=False,template=False,location=relocate_spec)
+        clone_spec = vim.vm.CloneSpec(powerOn=False, template=False, location=relocate_spec)
 
         run_loop = True
         vm = None
         logger.info('Trying to clone %s to new virtual machine' % template)
 
-        if find_vm(vc,logger,name):
+        if find_vm(vc, logger, name):
             logger.warning('Virtual machine already exists, not creating')
             run_loop = False
         else:
             logger.debug('Creating clone task')
-            task = template_vm.Clone(name=name,folder=folder,spec=clone_spec)
+            task = template_vm.Clone(name=name, folder=folder, spec=clone_spec)
             logger.info('Cloning task created')
             logger.info('Checking task for completion. This might take a while')
         
@@ -581,20 +502,20 @@ def main():
         logger.info('Setting Nuage Metadata')
         vm_option_values = []
         # Enterprise
-        vm_option_values.append(vim.option.OptionValue(key='nuage.enterprise',value=vm_enterprise.name))
+        vm_option_values.append(vim.option.OptionValue(key='nuage.enterprise', value=vm_enterprise.name))
         # Domain
-        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.domain',value=vm_domain.name))
+        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.domain', value=vm_domain.name))
         # Zone
-        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.zone',value=vm_zone.name))
+        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.zone', value=vm_zone.name))
         # Subnet
-        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.network',value=vm_subnet.name))
+        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.network', value=vm_subnet.name))
         # Network type
-        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.networktype',value='ipv4'))
+        vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.networktype', value='ipv4'))
         # User
-        vm_option_values.append(vim.option.OptionValue(key='nuage.user',value=vm_user.user_name))
+        vm_option_values.append(vim.option.OptionValue(key='nuage.user', value=vm_user.user_name))
         # IP
         if vm_ip:
-            vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.ip',value=vm_ip))
+            vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.ip', value=vm_ip))
 
         logger.debug('Creating of config spec for VM')
         config_spec = vim.vm.ConfigSpec(extraConfig=vm_option_values)
@@ -646,3 +567,4 @@ def main():
 # Start program
 if __name__ == "__main__":
     main()
+
