@@ -68,6 +68,7 @@ A CSV file can be used to import individual settings for each host. The structur
     "[primary NTP server (IP)]",
     "[secondary NTP server (IP)]",
     "[static route target IP]",
+    "[static route netmask (octet structure)]",
     "[static route next-hop gateway]",
     "[multicast send interface]",
     "[multicast send IP]",
@@ -133,12 +134,12 @@ def get_args():
     parser.add_argument('--host', required=False, help='Host IPs that has to be present in the Nuage vCenter Deployment Tool (can be specified multiple times)', dest='hosts', type=str, action='append')
     parser.add_argument('--host-configure-agent', required=False, help='Configure the VM Agent settings of the vCenter Hosts. It will configure the Management network you specify as an argument with --hv-management-network, or the one in the CSV file if specified. For datastore it will use the first available local datastore, or the one specified in the CSV file if provided.', dest='host_configure_agent', action='store_true')
     parser.add_argument('--hosts-file', nargs=1, required=False, help='CSV file which contains the configuration for each hypervisor', dest='hosts_file', type=str)
-    parser.add_argument('--hv-user', nargs=1, required=False, help='The ESXi hosts username', dest='hv_username', type=str)
+    parser.add_argument('--hv-user', nargs=1, required=True, help='The ESXi (default) hosts username', dest='hv_username', type=str)
     parser.add_argument('--hv-password', nargs=1, required=False, help='The ESXi hosts password. If not specified, the user is prompted at runtime for a password', dest='hv_password', type=str)
-    parser.add_argument('--hv-management-network', nargs=1, required=False, help='The ESXi hosts management network', dest='hv_management_network', type=str)
-    parser.add_argument('--hv-data-network', nargs=1, required=False, help='The ESXi hosts data network', dest='hv_data_network', type=str)
-    parser.add_argument('--hv-vm-network', nargs=1, required=False, help='The ESXi hosts VM network', dest='hv_vm_network', type=str)
-    parser.add_argument('--hv-mc-network', nargs=1, required=False, help='The ESXi hosts Multicast Source network', dest='hv_mc_network', type=str)
+    parser.add_argument('--hv-management-network', nargs=1, required=True, help='The ESXi hosts management network', dest='hv_management_network', type=str)
+    parser.add_argument('--hv-data-network', nargs=1, required=True, help='The ESXi hosts data network', dest='hv_data_network', type=str)
+    parser.add_argument('--hv-vm-network', nargs=1, required=True, help='The ESXi hosts VM network', dest='hv_vm_network', type=str)
+    parser.add_argument('--hv-mc-network', nargs=1, required=True, help='The ESXi hosts Multicast Source network', dest='hv_mc_network', type=str)
     parser.add_argument('-l', '--log-file', nargs=1, required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
     parser.add_argument('--nuage-enterprise', nargs=1, required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
     parser.add_argument('--nuage-host', nargs=1, required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
@@ -400,31 +401,33 @@ def handle_vdt_host(logger, nc, vc, vc_cl, vc_host, vc_host_ip, nuage_cl, nc_hos
             # 40 - "[static route target IP]" - static_route
             if row[40] and ip_address_is_valid(row[40]):
                 active_nc_host.static_route = row[40]
-            # 41 - "[static route next-hop gateway]" - static_route_gateway
-            if row[41] and ip_address_is_valid(row[41]):
-                active_nc_host.static_route_gateway = row[41]
-            # 42 - "[multicast send interface]" - multicast_send_interface
-            if row[42]:
-                active_nc_host.multicast_send_interface = row[42]
-            # 43 - "[multicast send IP]" - multicast_send_interface_ip
-            if row[43] and ip_address_is_valid(row[43]):
-                active_nc_host.multicast_send_interface_ip = row[43]
-            # 44 - "[multicast send netmask (octet structure)]" - multicast_send_interface_netmask
-            if row[44]:
-                active_nc_host.multicast_send_interface_netmask = row[44]
-            # 45 - "[multicast receive IP]" - multicast_receive_interface_ip
-            if row[45] and ip_address_is_valid(row[45]):
-                active_nc_host.multicast_receive_interface_ip = row[45]
-            # 46 - "[multicast receive netmask (octet structure)]" - multicast_receive_interface_netmask
-            if row[46]:
-                active_nc_host.multicast_receive_interface_netmask = row[46]
-
-            # 47 - "[Host Agent VM Port Group]"
+            # 41 - "[static route target IP]" - static_route
+            if row[41]:
+                active_nc_host.static_route_netmask = row[41]
+            # 42 - "[static route next-hop gateway]" - static_route_gateway
+            if row[42] and ip_address_is_valid(row[42]):
+                active_nc_host.static_route_gateway = row[42]
+            # 43 - "[multicast send interface]" - multicast_send_interface
+            if row[43]:
+                active_nc_host.multicast_send_interface = row[43]
+            # 44 - "[multicast send IP]" - multicast_send_interface_ip
+            if row[44] and ip_address_is_valid(row[44]):
+                active_nc_host.multicast_send_interface_ip = row[44]
+            # 45 - "[multicast send netmask (octet structure)]" - multicast_send_interface_netmask
+            if row[45]:
+                active_nc_host.multicast_send_interface_netmask = row[45]
+            # 46 - "[multicast receive IP]" - multicast_receive_interface_ip
+            if row[46] and ip_address_is_valid(row[46]):
+                active_nc_host.multicast_receive_interface_ip = row[46]
+            # 47 - "[multicast receive netmask (octet structure)]" - multicast_receive_interface_netmask
             if row[47]:
-                agent_portgroup_name = row[47]
-            # 48 - "[Host Agent VM Datastore]"
+                active_nc_host.multicast_receive_interface_netmask = row[47]
+            # 48 - "[Host Agent VM Port Group]"
             if row[48]:
-                agent_datastore_name = row[48]
+                agent_portgroup_name = row[48]
+            # 49 - "[Host Agent VM Datastore]"
+            if row[49]:
+                agent_datastore_name = row[49]
         else:
             logger.warning('Host %s with IP %s from the vCenter Cluster %s is not in the hosts file, it will not be updated.' % (vc_host.name, vc_host_ip, vc_cl.name))
     else:
@@ -632,7 +635,7 @@ def main():
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
         import ssl
-    if hasattr(ssl, '_create_unverified_context'): 
+        if hasattr(ssl, '_create_unverified_context'): 
             ssl._create_default_https_context = ssl._create_unverified_context
 
     # Getting user password for Nuage connection
