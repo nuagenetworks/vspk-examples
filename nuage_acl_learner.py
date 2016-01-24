@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-nuage-acl-learnier is a tool which can be used in a clean test environment to create a set of ACL rules which are being used by the applications running in that environment. 
+nuage_acl_learner is a tool which can be used in a clean test environment to create a set of ACL rules which are being used by the applications running in that environment. 
 
 After you configured your VRS's to point their flow logs to the IP of the server where you run this tool, you can start it and it will start listening for TCP connections on port 514.
 
