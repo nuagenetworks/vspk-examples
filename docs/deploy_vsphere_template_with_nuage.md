@@ -96,9 +96,6 @@ python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp -
 python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root 
 ```
 
-### Issues and feature requests ###
-Feel free to use the [Gitlab issue tracker](http://gitlab.us.alcatel-lucent.com/pdellaer/vSphere-Nuage/issues) of the repository to post issues and feature requests.
-
 ### Requirements ###
 1. [pyVmomi](https://github.com/vmware/pyvmomi)
 2. Nuage VSPK/VSDK (3.2+)

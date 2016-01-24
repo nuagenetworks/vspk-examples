@@ -1,5 +1,5 @@
 vcin_vdt_configure_from_vsphere.py
-====================
+==================================
 vcin_vdt_configure_from_vsphere is a script which will configure the full vCenter tree of Datacenters, Clusters and Hosts into the Nuage vCenter Integration Node and the Nuage vCenter Deployment Tool. It is also capable of configuring the ESXi hosts with the correct Agent VM settings.
 
 This script has the following features:
@@ -18,6 +18,12 @@ This script has the following features:
 * Provide verbose & debug logging
 
 Check the examples for several combinations of arguments.
+
+### Author ###
+Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
+
+### Version history ###
+2016-01-19 - 1.2
 
 ### CSV Strucure ###
 A CSV file can be used to import individual settings for each host. The structure of this CSV looks like this (fields in <> are mandatory, fields with [] can be left blank)
