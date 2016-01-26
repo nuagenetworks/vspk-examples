@@ -135,18 +135,12 @@ def main():
 
     try:
         # Connecting to Nuage 
-        try:
-            logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
-            nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
-            nc.start()
-        except IOError, e:
-            pass
-
-        if not nc or not nc.is_current_session():
-            logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
-            return 1
+        logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
+        nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
+        nc.start()
 
     except Exception, e:
+        logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
         logger.critical('Caught exception: %s' % str(e))
         return 1
 
@@ -188,7 +182,7 @@ def main():
 
     logger.debug('Printing output')
     if json_output:
-        print json.dumps(json_object, indent=4)
+        print json.dumps(json_object, sort_keys=True, indent=4)
     else:
         print pt.get_string(sortby='Timestamp')
 
