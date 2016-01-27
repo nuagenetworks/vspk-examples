@@ -105,19 +105,21 @@ python vcin_vdt_configure_from_vsphere.py -d --nuage-enterprise csp --nuage-host
 """
 
 import argparse
-import atexit
 import csv
 import getpass
 import logging
 import os.path
-import re
 import requests
 import sys
 import socket
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v3_2 as vsdk
+
+try: 
+    from vspk import v3_2 as vsdk
+except ImportError:
+    from vspk.vsdk import v3_2 as vsdk
 
 def get_args():
     """
@@ -224,11 +226,32 @@ def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_h
         if all_hosts:
             # Determining Host management IP
             vc_host_ip = None
-            for vnic in vc_host.config.network.vnic:
-                logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name, vc_cl.name))
-                if ip_address_is_valid(vnic.spec.ip.ipAddress):
-                    logger.debug('Found management IP %s for vCenter Host %s' % (vnic.spec.ip.ipAddress, vc_host.name))
-                    vc_host_ip = vnic.spec.ip.ipAddress
+            
+            #Determine management IP based on 'management' property
+            vnic_mgmtIP_list = []
+            for vc_host_NicManager in vc_host.config.virtualNicManagerInfo.netConfig:
+                if vc_host_NicManager.nicType == 'management':
+                    if( len(vc_host_NicManager.selectedVnic) >0):
+                        for vnic in vc_host_NicManager.candidateVnic:
+                            if vnic.key in vc_host_NicManager.selectedVnic:
+                                if ip_address_is_valid(vnic.spec.ip.ipAddress):
+                                    vnic_mgmtIP_list.append(vnic.spec.ip.ipAddress)
+                    break
+
+            if len(vnic_mgmtIP_list)>0:
+                for vnic_ip in vnic_mgmtIP_list:
+                    if ip_address_is_valid(vnic_ip):
+                        logger.debug('Found managenent IP %s for vCenter Host %s' % (vnic_ip, vc_host.name))
+                        vc_host_ip = vnic_ip
+                        break
+            else:
+            #Did not find any Management IP, use first IP
+                for vnic in vc_host.config.network.vnic:
+                    logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name,vc_cl.name))
+                    if ip_address_is_valid(vnic.spec.ip.ipAddress):
+                        logger.debug('Found management IP %s for vCenter Host %s' % (vnic.spec.ip.ipAddress, vc_host.name))
+                        vc_host_ip = vnic.spec.ip.ipAddress
+                        break
 
             handle_vdt_host(logger=logger, nc=nc, vc=vc, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vc_host_ip, nuage_cl=active_nc_cl, nc_host_list=nc_host_list, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
         else:
@@ -631,12 +654,14 @@ def main():
                     logger.warning('Found an invalid IP %s in the hosts file, skipping line' % row[0])
 
     # Disabling SSL verification if set
+    ssl_context = None
     if nosslcheck:
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
         import ssl
-        if hasattr(ssl, '_create_unverified_context'): 
-            ssl._create_default_https_context = ssl._create_unverified_context
+        if hasattr(ssl, 'SSLContext'): 
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+            ssl_context.verify_mode = ssl.CERT_NONE
 
     # Getting user password for Nuage connection
     if nuage_password is None:
@@ -672,7 +697,11 @@ def main():
         # Connecting to vCenter
         try:
             logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_https_port, vcenter_username))
-            vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port))
+            if ssl_context:
+                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port), sslContext=ssl_context)
+            else:
+                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port))
+
         except IOError, e:
             pass
 
@@ -731,4 +760,3 @@ def main():
 # Start program
 if __name__ == "__main__":
     main()
-

@@ -36,7 +36,11 @@ import sys
 from time import sleep
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v3_2 as vsdk
+
+try: 
+    from vspk import v3_2 as vsdk
+except ImportError:
+    from vspk.vsdk import v3_2 as vsdk
 
 def get_args():
     """
@@ -194,12 +198,14 @@ def main():
     logger = logging.getLogger(__name__)
 
     # Disabling SSL verification if set
+    ssl_context = None
     if nosslcheck:
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
         import ssl
-    if hasattr(ssl, '_create_unverified_context'): 
-        ssl._create_default_https_context = ssl._create_unverified_context
+        if hasattr(ssl, 'SSLContext'): 
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+            ssl_context.verify_mode = ssl.CERT_NONE
 
      # Getting user password for Nuage connection
     if nuage_password is None:
@@ -230,7 +236,10 @@ def main():
         # Connecting to vCenter
         try:
             logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_port, vcenter_username))
-            vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port))
+            if ssl_context:
+                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port), sslContext=ssl_context)
+            else:
+                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port))
         except IOError, e:
             pass
 
