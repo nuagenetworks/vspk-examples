@@ -183,58 +183,17 @@ def main():
     # Getting entities & defining output fields
     output_type = None
     entities = []
-    if entity_name:
-        if entity_type == 'DOMAIN':
-            logger.debug('Getting domain with name %s' % entity_name)
-            search = nc.user.domains.get_first(filter='name == "%s"' % entity_name)
-            if search:
-                entities.append(search)
-            output_type = 'Domain'
-        elif entity_type == 'ZONE':
-            logger.debug('Getting zone with name %s' % entity_name)
-            search = nc.user.zones.get_first(filter='name == "%s"' % entity_name)
-            if search:
-                entities.append(search)
-            output_type = 'Zone'
-        elif entity_type == 'SUBNET':
-            logger.debug('Getting subnet with name %s' % entity_name)
-            search = nc.user.subnets.get_first(filter='name == "%s"' % entity_name)
-            if search:
-                entities.append(search)
-            output_type = 'Subnet'
-        elif entity_type == 'VM':
-            logger.debug('Getting VM with name %s' % entity_name)
-            vms = nc.user.vms.get_first(filter='name == "%s"' % entity_name)
-            output_type = 'VM'
-            if vms:
-                for vm in vms:
-                    for vm_interface in vm.vm_interfaces.get():
-                        entities.append(vm_interface)
-    else:
-        if entity_type == 'DOMAIN':
-            logger.debug('Getting domains')
-            entities = nc.user.domains.get()
-            output_type = 'Domain'
-        if entity_type == 'L2DOMAIN':
-            logger.debug('Getting domains')
-            entities = nc.user.l2_domains.get()
-            output_type = 'L2 Domain'
-        elif entity_type == 'ZONE':
-            logger.debug('Getting zones')
-            entities = nc.user.zones.get()
-            output_type = 'Zone'
-        elif entity_type == 'SUBNET':
-            logger.debug('Getting subnets')
-            entities = nc.user.subnets.get()
-            output_type = 'Subnet'
-        elif entity_type == 'VM':
-            logger.debug('Getting VMs')
-            vms = nc.user.vms.get()
-            output_type = 'VM'
-            if vms: 
-                for vm in vms:
-                    for vm_interface in vm.vm_interfaces.get():
-                        entities.append(vm_interface)
+    output_type = entity_type.capitalize()
+    search_query = 'name == "%s"' % entity_name if entity_name else None
+    logger.debug('Getting %ss matching the search' % output_type)
+    entities = nc.user.fetcher_for_rest_name(entity_type.lower()).get(filter=search_query)
+
+    if entity_type == 'VM' and entities:
+        vms = entities
+        entities = []
+        for vm in vms:
+            for vm_interface in vm.vm_interfaces.get():
+                entities.append(vm_interface)
 
     # Filling output fields
     output_fields = [
