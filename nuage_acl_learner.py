@@ -12,7 +12,7 @@ The ACL rule entry will be created using either Policy Groups, Zones or Subnets,
 
 The tool can either specify 'any' as source port, or, if specified at runtime, the tool will be very strict and create a rule with the source port set to the one used in the flow. In most cases this strict policy is a bit overkill: most client connections use a random port, using a strict policy for source port would block the next traffic attempt because it is a different source port.
 
-The original idea came from Jeroen van Bemmel: http://gitlab.us.alcatel-lucent.com/jbemmel/Nuage-Scripting/tree/master/ACL-Discovery
+The original idea came from Jeroen van Bemmel.
 
 --- Author ---
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
@@ -335,12 +335,12 @@ def main():
 
     try:
         # Connecting to Nuage 
-        logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
-        nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
+        logger.info('Connecting to Nuage server %s:%s with username %s' % (configuration['nuage_host'], configuration['nuage_port'], configuration['nuage_username']))
+        nc = vsdk.NUVSDSession(username=configuration['nuage_username'], password=configuration['nuage_password'], enterprise=configuration['nuage_enterprise'], api_url="https://%s:%s" % (configuration['nuage_host'], configuration['nuage_port']))
         nc.start()
 
     except Exception, e:
-        logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
+        logger.error('Could not connect to Nuage host %s with user %s and specified password' % (configuration['nuage_host'], configuration['nuage_username']))
         logger.critical('Caught exception: %s' % str(e))
         return 1
 
