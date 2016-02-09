@@ -335,12 +335,12 @@ def main():
 
     try:
         # Connecting to Nuage 
-        logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
-        nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
+        logger.info('Connecting to Nuage server %s:%s with username %s' % (configuration['nuage_host'], configuration['nuage_port'], configuration['nuage_username']))
+        nc = vsdk.NUVSDSession(username=configuration['nuage_username'], password=configuration['nuage_password'], enterprise=configuration['nuage_enterprise'], api_url="https://%s:%s" % (configuration['nuage_host'], configuration['nuage_port']))
         nc.start()
 
     except Exception, e:
-        logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
+        logger.error('Could not connect to Nuage host %s with user %s and specified password' % (configuration['nuage_host'], configuration['nuage_username']))
         logger.critical('Caught exception: %s' % str(e))
         return 1
 
