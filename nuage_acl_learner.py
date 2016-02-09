@@ -12,7 +12,7 @@ The ACL rule entry will be created using either Policy Groups, Zones or Subnets,
 
 The tool can either specify 'any' as source port, or, if specified at runtime, the tool will be very strict and create a rule with the source port set to the one used in the flow. In most cases this strict policy is a bit overkill: most client connections use a random port, using a strict policy for source port would block the next traffic attempt because it is a different source port.
 
-The original idea came from Jeroen van Bemmel: http://gitlab.us.alcatel-lucent.com/jbemmel/Nuage-Scripting/tree/master/ACL-Discovery
+The original idea came from Jeroen van Bemmel.
 
 --- Author ---
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
