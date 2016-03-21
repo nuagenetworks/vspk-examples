@@ -533,7 +533,7 @@ def main():
         logger.debug('Waiting for the advanced paramerter to be applied')
         run_loop = True
         while run_loop:
-            info = task.info
+            info = config_task.info
             if info.state == vim.TaskInfo.State.success:
                 logger.debug('Advanced parameters applied')
                 run_loop = False
