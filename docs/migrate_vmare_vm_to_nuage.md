@@ -91,7 +91,20 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
                             interface needs to be attached.
       --vcenter-vm VCENTER_VM
                             The name of the VM to migrate
-    
+
+### Examples ###
+#### Migrate VM to layer 3 subnet in Nuage with metadata ####
+    python migrate_vmware_vm_to_nuage.py --nuage-enterprise csp --nuage-host 10.189.2.254 --nuage-user csproot --nuage-vm-user hradmin --nuage-vm-enterprise HR --nuage-vm-domain HR-Main-Domain --nuage-vm-zone Front --nuage-vm-subnet Web-Net --vcenter-host vc01.hr.company.tld --vcenter-user administrator@vsphere.local --vcenter-port-group Nuage-VM-PG1 --vcenter-vm LEGACY-VM -S -m metadata
+
+#### Migrate VM to layer 3 subnet in Nuage with split-activation ####
+    python migrate_vmware_vm_to_nuage.py --nuage-enterprise csp --nuage-host 10.189.2.254 --nuage-user csproot --nuage-vm-user hradmin --nuage-vm-enterprise Finance --nuage-vm-domain Finance-Main-Domain --nuage-vm-zone Front --nuage-vm-subnet Web-Net --vcenter-host vc01.fi.company.tld --vcenter-user administrator@vsphere.local --vcenter-port-group Nuage-VM-PG1 --vcenter-vm LEGACY-VM -S -m split-activation
+
+#### Migrate VM to layer 2 subnet in Nuage with metadata ####
+    python migrate_vmware_vm_to_nuage.py --nuage-enterprise csp --nuage-host 10.189.2.254 --nuage-user csproot --nuage-vm-user hradmin --nuage-vm-enterprise HR --nuage-vm-subnet L2-Domain --vcenter-host vc01.hr.company.tld --vcenter-user administrator@vsphere.local --vcenter-port-group Nuage-VM-PG1 --vcenter-vm LEGACY-VM -S -m metadata
+
+#### Migrate VM to layer 2 subnet in Nuage with split-activation ####
+    python migrate_vmware_vm_to_nuage.py --nuage-enterprise csp --nuage-host 10.189.2.254 --nuage-user csproot --nuage-vm-user hradmin --nuage-vm-enterprise Finance --nuage-vm-subnet L2-Domain --vcenter-host vc01.fi.company.tld --vcenter-user administrator@vsphere.local --vcenter-port-group Nuage-VM-PG1 --vcenter-vm LEGACY-VM -S -m split-activation
+
 ### Requirements ###
 * Nuage VSPK/VSDK (3.2+)
 * pyvmomi (5.1+)
