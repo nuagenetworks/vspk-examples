@@ -55,14 +55,14 @@ def get_args():
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
     parser.add_argument('-e', '--extended', required=False, help='Enable extended output', dest='extended', action='store_true')
     parser.add_argument('-j', '--json', required=False, help='Print as JSON, not as a table', dest='json_output', action='store_true')
-    parser.add_argument('-l', '--log-file', nargs=1, required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
-    parser.add_argument('-E', '--nuage-enterprise', nargs=1, required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
-    parser.add_argument('-H', '--nuage-host', nargs=1, required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
-    parser.add_argument('-P', '--nuage-port', nargs=1, required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=[8443])
-    parser.add_argument('-p', '--nuage-password', nargs=1, required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
-    parser.add_argument('-u', '--nuage-user', nargs=1, required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
+    parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
+    parser.add_argument('-E', '--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
+    parser.add_argument('-H', '--nuage-host', required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
+    parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
+    parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
+    parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
     parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
-    parser.add_argument('-t', '--time', nargs=1, required=False, help='Indication of how far back in the past the events list should go. Can be set in seconds, minutes (add m), hours (add h) or days (add d) (examples: 60, 60m, 60h or 60d, default is 3600 seconds)', dest='time_difference', type=str, default=['3600'])
+    parser.add_argument('-t', '--time', required=False, help='Indication of how far back in the past the events list should go. Can be set in seconds, minutes (add m), hours (add h) or days (add d) (examples: 60, 60m, 60h or 60d, default is 3600 seconds)', dest='time_difference', type=str, default='3600')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
@@ -79,16 +79,16 @@ def main():
     json_output         = args.json_output
     log_file            = None
     if args.logfile:
-        log_file        = args.logfile[0]
-    nuage_enterprise    = args.nuage_enterprise[0]
-    nuage_host          = args.nuage_host[0]
-    nuage_port          = args.nuage_port[0]
+        log_file        = args.logfile
+    nuage_enterprise    = args.nuage_enterprise
+    nuage_host          = args.nuage_host
+    nuage_port          = args.nuage_port
     nuage_password      = None
     if args.nuage_password:
-        nuage_password  = args.nuage_password[0]
-    nuage_username      = args.nuage_username[0]
+        nuage_password  = args.nuage_password
+    nuage_username      = args.nuage_username
     nosslcheck          = args.nosslcheck
-    time_difference     = args.time_difference[0]
+    time_difference     = args.time_difference
     verbose             = args.verbose
 
     # Logging settings

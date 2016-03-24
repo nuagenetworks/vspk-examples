@@ -83,16 +83,16 @@ def get_args():
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
     parser.add_argument('-e', '--entity-type', required=True, help='The type of entity to gather the statistics for, can be DOMAIN, ZONE, SUBNET or VM.', dest='entity_type', type=str, choices=entity_valid_types)
     parser.add_argument('-j', '--json', required=False, help='Print as JSON, not as a table', dest='json_output', action='store_true')
-    parser.add_argument('-l', '--log-file', nargs=1, required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
-    parser.add_argument('-n', '--entity-name', nargs=1, required=False, help='Entity name to provide statistics for. If not specified all entities of the entiy-type will be used', dest='entity_name', type=str)
-    parser.add_argument('-E', '--nuage-enterprise', nargs=1, required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
-    parser.add_argument('-H', '--nuage-host', nargs=1, required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
-    parser.add_argument('-P', '--nuage-port', nargs=1, required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=[8443])
-    parser.add_argument('-p', '--nuage-password', nargs=1, required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
-    parser.add_argument('-u', '--nuage-user', nargs=1, required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
+    parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
+    parser.add_argument('-n', '--entity-name', required=False, help='Entity name to provide statistics for. If not specified all entities of the entiy-type will be used', dest='entity_name', type=str)
+    parser.add_argument('-E', '--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
+    parser.add_argument('-H', '--nuage-host', required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
+    parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
+    parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
+    parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
     parser.add_argument('-s', '--statistic-type', required=False, help='The type of statistics to gather. If not specified, all are used. Can be specified multiple times. Possible values are: BYTES_IN, BYTES_OUT, EGRESS_BYTE_COUNT, EGRESS_PACKET_COUNT, INGRESS_BYTE_COUNT, INGRESS_PACKET_COUNT, PACKETS_DROPPED_BY_RATE_LIMIT, PACKETS_IN, PACKETS_IN_DROPPED, PACKETS_IN_ERROR, PACKETS_OUT, PACKETS_OUT_DROPPED, PACKETS_OUT_ERROR', dest='statistic_types', type=str, choices=statistics_valid_types, action='append')
     parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
-    parser.add_argument('-t', '--time', nargs=1, required=False, help='Indication of how far back in the past the statistics should go. Can be set in seconds, minutes (add m), hours (add h) or days (add d) (examples: 60, 60m, 60h or 60d, default is 3600 seconds)', dest='time_difference', type=str, default=['3600'])
+    parser.add_argument('-t', '--time', required=False, help='Indication of how far back in the past the statistics should go. Can be set in seconds, minutes (add m), hours (add h) or days (add d) (examples: 60, 60m, 60h or 60d, default is 3600 seconds)', dest='time_difference', type=str, default='3600')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
@@ -109,22 +109,22 @@ def main():
     json_output         = args.json_output
     log_file            = None
     if args.logfile:
-        log_file        = args.logfile[0]
+        log_file        = args.logfile
     entity_name         = None
     if args.entity_name:
-        entity_name     = args.entity_name[0]
-    nuage_enterprise    = args.nuage_enterprise[0]
-    nuage_host          = args.nuage_host[0]
-    nuage_port          = args.nuage_port[0]
+        entity_name     = args.entity_name
+    nuage_enterprise    = args.nuage_enterprise
+    nuage_host          = args.nuage_host
+    nuage_port          = args.nuage_port
     nuage_password      = None
     if args.nuage_password:
-        nuage_password  = args.nuage_password[0]
-    nuage_username      = args.nuage_username[0]
+        nuage_password  = args.nuage_password
+    nuage_username      = args.nuage_username
     statistic_types     = statistics_valid_types
     if args.statistic_types:
         statistic_types = args.statistic_types
     nosslcheck          = args.nosslcheck
-    time_difference     = args.time_difference[0]
+    time_difference     = args.time_difference
     verbose             = args.verbose
 
     # Logging settings
