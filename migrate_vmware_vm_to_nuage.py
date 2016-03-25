@@ -59,26 +59,26 @@ def get_args():
 
     parser = argparse.ArgumentParser(description="Tool to migrate a VMware VM, with VMware tools or open-vm-tools, to a Nuage VSP environment. In default mode it will gather the VMs IP and check if it is part of the specified subnet. If it is, it will populate the VM with the correct metadata and reconnect the interface to the OVS-PG. In split activation mode, it will gather the MAC, UUID and IP from the VM and create a vPort and VM before reconnecting the nic to the OVS-PG.")
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
-    parser.add_argument('-l', '--log-file', nargs=1, required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
-    parser.add_argument('-m', '--mode', nargs=1, required=False, help='Select between metadata and split-activation', dest='mode', type=str, choices=['metadata','split-activation'], default=['medatada'])
-    parser.add_argument('--nuage-enterprise', nargs=1, required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
-    parser.add_argument('--nuage-host', nargs=1, required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
-    parser.add_argument('--nuage-port', nargs=1, required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=[8443])
-    parser.add_argument('--nuage-password', nargs=1, required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
-    parser.add_argument('--nuage-user', nargs=1, required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
-    parser.add_argument('--nuage-vm-enterprise', nargs=1, required=True, help='The Nuage enterprise to which the VM should be connected', dest='nuage_vm_enterprise', type=str)
-    parser.add_argument('--nuage-vm-domain', nargs=1, required=False, help='The Nuage domain to which the VM should be connected', dest='nuage_vm_domain', type=str)
-    parser.add_argument('--nuage-vm-zone', nargs=1, required=False, help='The Nuage zone to which the VM should be connected', dest='nuage_vm_zone', type=str)
-    parser.add_argument('--nuage-vm-subnet', nargs=1, required=True, help='The Nuage subnet to which the VM should be connected', dest='nuage_vm_subnet', type=str)
-    parser.add_argument('--nuage-vm-user', nargs=1, required=True, help='The Nuage User owning the VM', dest='nuage_vm_user', type=str)
+    parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
+    parser.add_argument('-m', '--mode', required=False, help='Select between metadata and split-activation', dest='mode', type=str, choices=['metadata','split-activation'], default='medatada' )
+    parser.add_argument('--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
+    parser.add_argument('--nuage-host', required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
+    parser.add_argument('--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
+    parser.add_argument('--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
+    parser.add_argument('--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
+    parser.add_argument('--nuage-vm-enterprise', required=True, help='The Nuage enterprise to which the VM should be connected', dest='nuage_vm_enterprise', type=str)
+    parser.add_argument('--nuage-vm-domain', required=False, help='The Nuage domain to which the VM should be connected', dest='nuage_vm_domain', type=str)
+    parser.add_argument('--nuage-vm-zone', required=False, help='The Nuage zone to which the VM should be connected', dest='nuage_vm_zone', type=str)
+    parser.add_argument('--nuage-vm-subnet', required=True, help='The Nuage subnet to which the VM should be connected', dest='nuage_vm_subnet', type=str)
+    parser.add_argument('--nuage-vm-user', required=True, help='The Nuage User owning the VM', dest='nuage_vm_user', type=str)
     parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
-    parser.add_argument('--vcenter-host', nargs=1, required=True, help='The vCenter or ESXi host to connect to', dest='vcenter_host', type=str)
-    parser.add_argument('--vcenter-port', nargs=1, required=False, help='vCenter Server port to connect to (default = 443)', dest='vcenter_port', type=int, default=[443])
-    parser.add_argument('--vcenter-password', nargs=1, required=False, help='The password with which to connect to the vCenter host. If not specified, the user is prompted at runtime for a password', dest='vcenter_password', type=str)
-    parser.add_argument('--vcenter-user', nargs=1, required=True, help='The username with which to connect to the vCenter host', dest='vcenter_username', type=str)
-    parser.add_argument('--vcenter-port-group', nargs=1, required=True, help='The name of the distributed Portgroup to which the interface needs to be attached.', dest='vcenter_portgroup', type=str)
-    parser.add_argument('--vcenter-vm', nargs=1, required=True, help='The name of the VM to migrate', dest='vcenter_vm', type=str)
+    parser.add_argument('--vcenter-host', required=True, help='The vCenter or ESXi host to connect to', dest='vcenter_host', type=str)
+    parser.add_argument('--vcenter-port', required=False, help='vCenter Server port to connect to (default = 443)', dest='vcenter_port', type=int, default=443)
+    parser.add_argument('--vcenter-password', required=False, help='The password with which to connect to the vCenter host. If not specified, the user is prompted at runtime for a password', dest='vcenter_password', type=str)
+    parser.add_argument('--vcenter-user', required=True, help='The username with which to connect to the vCenter host', dest='vcenter_username', type=str)
+    parser.add_argument('--vcenter-port-group', required=True, help='The name of the distributed Portgroup to which the interface needs to be attached.', dest='vcenter_portgroup', type=str)
+    parser.add_argument('--vcenter-vm', required=True, help='The name of the VM to migrate', dest='vcenter_vm', type=str)
     args = parser.parse_args()
     return args
 
@@ -115,36 +115,36 @@ def main():
     debug               = args.debug
     log_file            = None
     if args.logfile:
-        log_file        = args.logfile[0]
-    mode                = args.mode[0]
-    nuage_enterprise    = args.nuage_enterprise[0]
-    nuage_host          = args.nuage_host[0]
-    nuage_port          = args.nuage_port[0]
+        log_file        = args.logfile
+    mode                = args.mode
+    nuage_enterprise    = args.nuage_enterprise
+    nuage_host          = args.nuage_host
+    nuage_port          = args.nuage_port
     nuage_password      = None
     if args.nuage_password:
-        nuage_password  = args.nuage_password[0]
-    nuage_username      = args.nuage_username[0]
+        nuage_password  = args.nuage_password
+    nuage_username      = args.nuage_username
     nosslcheck          = args.nosslcheck
     verbose             = args.verbose
-    nuage_vm_enterprise = args.nuage_vm_enterprise[0]
+    nuage_vm_enterprise = args.nuage_vm_enterprise
     nuage_vm_domain     = None
     if args.nuage_vm_domain:
-        nuage_vm_domain = args.nuage_vm_domain[0]
+        nuage_vm_domain = args.nuage_vm_domain
     nuage_vm_zone       = None
     if args.nuage_vm_zone:
-        nuage_vm_zone   = args.nuage_vm_zone[0]
-    nuage_vm_subnet = args.nuage_vm_subnet[0]
+        nuage_vm_zone   = args.nuage_vm_zone
+    nuage_vm_subnet = args.nuage_vm_subnet
     nuage_vm_user       = None
     if args.nuage_vm_user:
-        nuage_vm_user   = args.nuage_vm_user[0]
-    vcenter_host        = args.vcenter_host[0]
-    vcenter_port        = args.vcenter_port[0]
+        nuage_vm_user   = args.nuage_vm_user
+    vcenter_host        = args.vcenter_host
+    vcenter_port        = args.vcenter_port
     vcenter_password    = None
     if args.vcenter_password:
-        vcenter_password = args.vcenter_password[0]
-    vcenter_username    = args.vcenter_username[0]
-    vcenter_portgroup   = args.vcenter_portgroup[0]
-    vcenter_vm          = args.vcenter_vm[0]
+        vcenter_password = args.vcenter_password
+    vcenter_username    = args.vcenter_username
+    vcenter_portgroup   = args.vcenter_portgroup
+    vcenter_vm          = args.vcenter_vm
 
     # Logging settings
     if debug:

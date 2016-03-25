@@ -256,17 +256,17 @@ def get_args():
 
     parser = argparse.ArgumentParser(description="Tool which will create ACLs learned from flow logs from the VRS. It will actively listen to incomming syslog connections on port 514.")
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
-    parser.add_argument('-f', '--first-priority', nargs=1, required=False, help='The priority of the first created rule (will be incremented for each next rule), default is 100', dest='first_priority', type=int, default=[100])
-    parser.add_argument('-l', '--log-file', nargs=1, required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
-    parser.add_argument('-D', '--nuage-domain', nargs=1, required=True, help='The domain to investigate and set ACLs on', dest='nuage_domain', type=str)
-    parser.add_argument('-E', '--nuage-enterprise', nargs=1, required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
-    parser.add_argument('-H', '--nuage-host', nargs=1, required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
-    parser.add_argument('-P', '--nuage-port', nargs=1, required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=[8443])
-    parser.add_argument('-p', '--nuage-password', nargs=1, required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
-    parser.add_argument('-u', '--nuage-user', nargs=1, required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
+    parser.add_argument('-f', '--first-priority', required=False, help='The priority of the first created rule (will be incremented for each next rule), default is 100', dest='first_priority', type=int, default=100)
+    parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
+    parser.add_argument('-D', '--nuage-domain', required=True, help='The domain to investigate and set ACLs on', dest='nuage_domain', type=str)
+    parser.add_argument('-E', '--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
+    parser.add_argument('-H', '--nuage-host', required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
+    parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
+    parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
+    parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
     parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
     parser.add_argument('-s', '--strict-source-ports', required=False, help='Use strict source ports, this will set the specific source port instead of the default * setting for Ingress rules.', dest='strictsource', action='store_true')
-    parser.add_argument('-t', '--type', nargs=1, required=True, help='On what entity type should the ACLs be applied. Valid responses: POLICYGROUP, ZONE, SUBNET', dest='acl_type', type=str, choices=['POLICYGROUP','ZONE','SUBNET'])
+    parser.add_argument('-t', '--type', required=True, help='On what entity type should the ACLs be applied. Valid responses: POLICYGROUP, ZONE, SUBNET', dest='acl_type', type=str, choices=['POLICYGROUP','ZONE','SUBNET'])
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
@@ -294,21 +294,21 @@ def main():
     # Handling arguments
     args                = get_args()
     configuration['debug']               = args.debug
-    configuration['next_priority']       = args.first_priority[0]
+    configuration['next_priority']       = args.first_priority
     configuration['log_file']            = None
     if args.logfile:
-        configuration['log_file']        = args.logfile[0]
-    configuration['nuage_domain']        = args.nuage_domain[0]
-    configuration['nuage_enterprise']    = args.nuage_enterprise[0]
-    configuration['nuage_host']          = args.nuage_host[0]
-    configuration['nuage_port']          = args.nuage_port[0]
+        configuration['log_file']        = args.logfile
+    configuration['nuage_domain']        = args.nuage_domain
+    configuration['nuage_enterprise']    = args.nuage_enterprise
+    configuration['nuage_host']          = args.nuage_host
+    configuration['nuage_port']          = args.nuage_port
     configuration['nuage_password']      = None
     if args.nuage_password:
-        configuration['nuage_password']  = args.nuage_password[0]
-    configuration['nuage_username']      = args.nuage_username[0]
+        configuration['nuage_password']  = args.nuage_password
+    configuration['nuage_username']      = args.nuage_username
     configuration['strictsource']        = args.strictsource
     configuration['nosslcheck']          = args.nosslcheck
-    configuration['acl_type']            = args.acl_type[0]
+    configuration['acl_type']            = args.acl_type
     configuration['verbose']             = args.verbose
 
     # Logging settings

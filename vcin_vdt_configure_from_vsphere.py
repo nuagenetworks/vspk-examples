@@ -135,28 +135,28 @@ def get_args():
     parser.add_argument('--datacenter', required=False, help='Datacenter that has to be present in the Nuage vCenter Deployment Tool (can be specified multiple times)', dest='datacenters', type=str, action='append')
     parser.add_argument('--host', required=False, help='Host IPs that has to be present in the Nuage vCenter Deployment Tool (can be specified multiple times)', dest='hosts', type=str, action='append')
     parser.add_argument('--host-configure-agent', required=False, help='Configure the VM Agent settings of the vCenter Hosts. It will configure the Management network you specify as an argument with --hv-management-network, or the one in the CSV file if specified. For datastore it will use the first available local datastore, or the one specified in the CSV file if provided.', dest='host_configure_agent', action='store_true')
-    parser.add_argument('--hosts-file', nargs=1, required=False, help='CSV file which contains the configuration for each hypervisor', dest='hosts_file', type=str)
-    parser.add_argument('--hv-user', nargs=1, required=True, help='The ESXi (default) hosts username', dest='hv_username', type=str)
-    parser.add_argument('--hv-password', nargs=1, required=False, help='The ESXi hosts password. If not specified, the user is prompted at runtime for a password', dest='hv_password', type=str)
-    parser.add_argument('--hv-management-network', nargs=1, required=True, help='The ESXi hosts management network', dest='hv_management_network', type=str)
-    parser.add_argument('--hv-data-network', nargs=1, required=True, help='The ESXi hosts data network', dest='hv_data_network', type=str)
-    parser.add_argument('--hv-vm-network', nargs=1, required=True, help='The ESXi hosts VM network', dest='hv_vm_network', type=str)
-    parser.add_argument('--hv-mc-network', nargs=1, required=True, help='The ESXi hosts Multicast Source network', dest='hv_mc_network', type=str)
-    parser.add_argument('-l', '--log-file', nargs=1, required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
-    parser.add_argument('--nuage-enterprise', nargs=1, required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
-    parser.add_argument('--nuage-host', nargs=1, required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
-    parser.add_argument('--nuage-port', nargs=1, required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=[8443])
-    parser.add_argument('--nuage-password', nargs=1, required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
-    parser.add_argument('--nuage-user', nargs=1, required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
-    parser.add_argument('--nuage-vrs-ovf', nargs=1, required=False, help='The URL of the VRS OVF file', dest='nuage_vrs_ovf', type=str)
+    parser.add_argument('--hosts-file', required=False, help='CSV file which contains the configuration for each hypervisor', dest='hosts_file', type=str)
+    parser.add_argument('--hv-user', required=True, help='The ESXi (default) hosts username', dest='hv_username', type=str)
+    parser.add_argument('--hv-password', required=False, help='The ESXi hosts password. If not specified, the user is prompted at runtime for a password', dest='hv_password', type=str)
+    parser.add_argument('--hv-management-network', required=True, help='The ESXi hosts management network', dest='hv_management_network', type=str)
+    parser.add_argument('--hv-data-network', required=True, help='The ESXi hosts data network', dest='hv_data_network', type=str)
+    parser.add_argument('--hv-vm-network', required=True, help='The ESXi hosts VM network', dest='hv_vm_network', type=str)
+    parser.add_argument('--hv-mc-network', required=True, help='The ESXi hosts Multicast Source network', dest='hv_mc_network', type=str)
+    parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
+    parser.add_argument('--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
+    parser.add_argument('--nuage-host', required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
+    parser.add_argument('--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
+    parser.add_argument('--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
+    parser.add_argument('--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
+    parser.add_argument('--nuage-vrs-ovf', required=False, help='The URL of the VRS OVF file', dest='nuage_vrs_ovf', type=str)
     parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
-    parser.add_argument('--vcenter-host', nargs=1, required=True, help='The vCenter server to connect to, use the IP', dest='vcenter_host', type=str)
-    parser.add_argument('--vcenter-name', nargs=1, required=False, help='The name of the vCenter you want in the vCenter Deployment Tool', dest='vcenter_name', type=str)
-    parser.add_argument('--vcenter-http-port', nargs=1, required=False, help='The vCenter server HTTP port to connect to (default = 80)', dest='vcenter_http_port', type=int, default=[80])
-    parser.add_argument('--vcenter-https-port', nargs=1, required=False, help='The vCenter server HTTPS port to connect to (default = 443)', dest='vcenter_https_port', type=int, default=[443])
-    parser.add_argument('--vcenter-password', nargs=1, required=False, help='The password with which to connect to the vCenter host. If not specified, the user is prompted at runtime for a password', dest='vcenter_password', type=str)
-    parser.add_argument('--vcenter-user', nargs=1, required=True, help='The username with which to connect to the vCenter host', dest='vcenter_username', type=str)
+    parser.add_argument('--vcenter-host', required=True, help='The vCenter server to connect to, use the IP', dest='vcenter_host', type=str)
+    parser.add_argument('--vcenter-name', required=False, help='The name of the vCenter you want in the vCenter Deployment Tool', dest='vcenter_name', type=str)
+    parser.add_argument('--vcenter-http-port', required=False, help='The vCenter server HTTP port to connect to (default = 80)', dest='vcenter_http_port', type=int, default=80)
+    parser.add_argument('--vcenter-https-port', required=False, help='The vCenter server HTTPS port to connect to (default = 443)', dest='vcenter_https_port', type=int, default=443)
+    parser.add_argument('--vcenter-password', required=False, help='The password with which to connect to the vCenter host. If not specified, the user is prompted at runtime for a password', dest='vcenter_password', type=str)
+    parser.add_argument('--vcenter-user', required=True, help='The username with which to connect to the vCenter host', dest='vcenter_username', type=str)
     args = parser.parse_args()
     return args
 
@@ -548,50 +548,50 @@ def main():
     host_configure_agent= args.host_configure_agent
     hosts_file             = None
     if args.hosts_file:
-        hosts_file         = args.hosts_file[0]
+        hosts_file         = args.hosts_file
     hv_username             = None
     if args.hv_username:
-        hv_username         = args.hv_username[0]
+        hv_username         = args.hv_username
     hv_password         = None
     if args.hv_password:
-        hv_password     = args.hv_password[0]
+        hv_password     = args.hv_password
     hv_management_network = None
     if args.hv_management_network:
-        hv_management_network = args.hv_management_network[0]
+        hv_management_network = args.hv_management_network
     hv_data_network     = None
     if args.hv_data_network:
-        hv_data_network = args.hv_data_network[0]
+        hv_data_network = args.hv_data_network
     hv_vm_network       = None
     if args.hv_vm_network:
-        hv_vm_network   = args.hv_vm_network[0]
+        hv_vm_network   = args.hv_vm_network
     hv_mc_network       = None
     if args.hv_mc_network:
-        hv_mc_network   = args.hv_mc_network[0]
+        hv_mc_network   = args.hv_mc_network
     log_file            = None
     if args.logfile:
-        log_file        = args.logfile[0]
-    nuage_enterprise    = args.nuage_enterprise[0]
-    nuage_host          = args.nuage_host[0]
-    nuage_port          = args.nuage_port[0]
+        log_file        = args.logfile
+    nuage_enterprise    = args.nuage_enterprise
+    nuage_host          = args.nuage_host
+    nuage_port          = args.nuage_port
     nuage_password      = None
     if args.nuage_password:
-        nuage_password  = args.nuage_password[0]
-    nuage_username      = args.nuage_username[0]
+        nuage_password  = args.nuage_password
+    nuage_username      = args.nuage_username
     nuage_vrs_ovf       = None
     if args.nuage_vrs_ovf:
-        nuage_vrs_ovf   = args.nuage_vrs_ovf[0]
+        nuage_vrs_ovf   = args.nuage_vrs_ovf
     nosslcheck          = args.nosslcheck
     verbose             = args.verbose
-    vcenter_host        = args.vcenter_host[0]
+    vcenter_host        = args.vcenter_host
     vcenter_name        = vcenter_host
     if args.vcenter_name:
-        vcenter_name    = args.vcenter_name[0]
-    vcenter_https_port  = args.vcenter_https_port[0]
-    vcenter_http_port   = args.vcenter_http_port[0]
+        vcenter_name    = args.vcenter_name
+    vcenter_https_port  = args.vcenter_https_port
+    vcenter_http_port   = args.vcenter_http_port
     vcenter_password    = None
     if args.vcenter_password:
-        vcenter_password = args.vcenter_password[0]
-    vcenter_username    = args.vcenter_username[0]
+        vcenter_password = args.vcenter_password
+    vcenter_username    = args.vcenter_username
 
     # Logging settings
     if debug:
