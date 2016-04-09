@@ -52,10 +52,7 @@ import string
 import SocketServer
 import time
 
-try:
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
+from vspk import v4_0 as vsdk
 
 # Global variables
 nc = None

@@ -8,7 +8,7 @@ python list_enterprises_domains_vms_structure_acls.py
 --- Author ---
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 """
-from vspk import v3_2 as vsdk
+from vspk import v4_0 as vsdk
 
 session = vsdk.NUVSDSession(
     username='csproot',
