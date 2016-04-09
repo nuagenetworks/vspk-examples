@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-nuage_acl_learner is a tool which can be used in a clean test environment to create a set of ACL rules which are being used by the applications running in that environment. 
+nuage_acl_learner is a tool which can be used in a clean test environment to create a set of ACL rules which are being used by the applications running in that environment.
 
 After you configured your VRS's to point their flow logs to the IP of the server where you run this tool, you can start it and it will start listening for TCP connections on port 514.
 
 At the start, the tool will investigate the specified domain and will create a set of learning ACL rules (both ingress and egress). These rules will be used to enable logging for all traffic.
 
-Once a flow log messages is sent to the tool from a VRS, the tool will investigate the flow and will implement a matching ACL rule entry. 
+Once a flow log messages is sent to the tool from a VRS, the tool will investigate the flow and will implement a matching ACL rule entry.
 
 The ACL rule entry will be created using either Policy Groups, Zones or Subnets, depending on the type specified at runtime. If the destination of the traffic is outside of the domain, a network macro for the destination will be created and used in the rule.
 
@@ -21,7 +21,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-01-22 - 1.0 - Only Ingress rules for now
 
 --- VRS configuration ---
-To configure your VRS, you have to edit the (r)syslog configuration to send everything matching 'ACLAUDIT' to the server running this tool on port 514 via a TCP connection. 
+To configure your VRS, you have to edit the (r)syslog configuration to send everything matching 'ACLAUDIT' to the server running this tool on port 514 via a TCP connection.
 
 Example rsyslogd rule if the tool is running on 10.167.43.23:
     :msg,contains,"ACLAUDIT" @@10.167.43.23:514
@@ -32,7 +32,7 @@ Example rsyslogd rule if the tool is running on 10.167.43.23:
 - Only creates ingress rules for now
 - It does not use the commit/rollback system for ACLs as this is an automated tool. The rules impact traffic immediatly
 
---- Usage --- 
+--- Usage ---
 run 'python nuage_acl_learner.py -h' for an overview
 
 --- Documentation ---
@@ -46,14 +46,13 @@ python nuage_acl_learner.py -d -D "Main Customer Domain" -E csp -H 10.167.43.64 
 import argparse
 import getpass
 import logging
-import os.path
 import re
 import requests
 import string
 import SocketServer
 import time
 
-try: 
+try:
     from vspk import v3_2 as vsdk
 except ImportError:
     from vspk.vsdk import v3_2 as vsdk
@@ -74,6 +73,7 @@ flows = {}
 ip_regex = re.compile('.*dir: (\w+).*ipv4\(src=([\d\.]+)[^,]*,dst=([\d\.]+)[^,]*,proto=(\w+).*')
 traffic_regex = re.compile('.*(tcp|udp)\(src=(\d+)[^,]*,dst=(\d+)[^\)]*\).*')
 
+
 class ACLTCPHandler(SocketServer.StreamRequestHandler):
     """
     Will handle ACL log messages and create appropriate ACLs
@@ -90,7 +90,7 @@ class ACLTCPHandler(SocketServer.StreamRequestHandler):
         if ip_matches is None:
             logger.debug('No valid stream found')
             return 0
-        
+
         flow_matches = traffic_regex.match(data)
         if flow_matches is None:
             logger.debug('No valid TCP/UDP stream found')
@@ -108,7 +108,7 @@ class ACLTCPHandler(SocketServer.StreamRequestHandler):
 
         if configuration['strictsource']:
             flow_id = '%s_%s_%s_%s_%s' % (stream_type, stream_src_ip, stream_src_port, stream_dst_ip, stream_dst_port)
-        else: 
+        else:
             flow_id = '%s_%s_%s_%s' % (stream_type, stream_src_ip, stream_dst_ip, stream_dst_port)
             stream_src_port = '*'
 
@@ -136,7 +136,7 @@ class ACLTCPHandler(SocketServer.StreamRequestHandler):
                 else:
                     logger.error('Source vPort with IP %s does not have a Policy Group assigned, can not create ACL rules' % stream_src_ip)
                     return 1
-        else: 
+        else:
             logger.error('Unknown vPort for source IP %s, skipping this flow' % stream_src_ip)
             return 1
 
@@ -159,18 +159,18 @@ class ACLTCPHandler(SocketServer.StreamRequestHandler):
             logger.debug('Found destination network macro for IP %s' % stream_dst_ip)
         else:
             logger.debug('vPort or Network Macro for destination IP %s does not exist, creating a /32 Network Macro' % stream_dst_ip)
-            temp_nm_name = string.replace('%s-255.255.255.255' % stream_dst_ip, '.','_')
+            temp_nm_name = string.replace('%s-255.255.255.255' % stream_dst_ip, '.', '_')
             temp_nm = vsdk.NUEnterpriseNetwork(
                 name=temp_nm_name,
                 address=stream_dst_ip,
                 netmask='255.255.255.255'
-                )
+            )
             nc_enterprise.create_child(temp_nm)
             logger.info('Created new Network Macro for destination IP %s' % stream_dst_ip)
             dst_nm = {
-            'id': temp_nm.id,
-            'address': stream_dst_ip,
-            'netmask': '255.255.255.255'
+                'id': temp_nm.id,
+                'address': stream_dst_ip,
+                'netmask': '255.255.255.255'
             }
             nc_networkmacromap['%s-255.255.255.255' % stream_dst_ip] = dst_nm
 
@@ -221,33 +221,30 @@ class ACLTCPHandler(SocketServer.StreamRequestHandler):
             dscp='*',
             reflexive=True,
             priority=configuration['next_priority']
-            )
+        )
 
-        # For now we work without jobs, way easier... 
-        #job = vsdk.NUJob(command='BEGIN_POLICY_CHANGES')
-        #wait_for_job(nc_domain, job)
+        # For now we work without jobs, way easier...
         ingress_learning_acl.create_child(ingress_acl_entry, async=False)
-        #job = vsdk.NUJob(command='APPLY_POLICY_CHANGES')
-        #wait_for_job(nc_domain, job)
 
         flows[flow_id] = {
-        'action': 'FORWARD',
-        'description': 'Learned - %s %s:%s to %s:%s' % (stream_type, stream_src_ip, stream_src_port, stream_dst_ip, stream_dst_port),
-        'ether_type': '0x0800',
-        'location_type': src_type,
-        'location_id': src_id,
-        'network_type': dst_type,
-        'network_id': dst_id,
-        'protocol': stream_protocol,
-        'source_port': stream_src_port,
-        'destination_port': stream_dst_port,
-        'dscp': '*',
-        'reflexive': True,
-        'priority': configuration['next_priority']
+            'action': 'FORWARD',
+            'description': 'Learned - %s %s:%s to %s:%s' % (stream_type, stream_src_ip, stream_src_port, stream_dst_ip, stream_dst_port),
+            'ether_type': '0x0800',
+            'location_type': src_type,
+            'location_id': src_id,
+            'network_type': dst_type,
+            'network_id': dst_id,
+            'protocol': stream_protocol,
+            'source_port': stream_src_port,
+            'destination_port': stream_dst_port,
+            'dscp': '*',
+            'reflexive': True,
+            'priority': configuration['next_priority']
         }
 
         configuration['next_priority'] += 1
         return 0
+
 
 def get_args():
     """
@@ -266,10 +263,11 @@ def get_args():
     parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
     parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
     parser.add_argument('-s', '--strict-source-ports', required=False, help='Use strict source ports, this will set the specific source port instead of the default * setting for Ingress rules.', dest='strictsource', action='store_true')
-    parser.add_argument('-t', '--type', required=True, help='On what entity type should the ACLs be applied. Valid responses: POLICYGROUP, ZONE, SUBNET', dest='acl_type', type=str, choices=['POLICYGROUP','ZONE','SUBNET'])
+    parser.add_argument('-t', '--type', required=True, help='On what entity type should the ACLs be applied. Valid responses: POLICYGROUP, ZONE, SUBNET', dest='acl_type', type=str, choices=['POLICYGROUP', 'ZONE', 'SUBNET'])
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
+
 
 def wait_for_job(parent, job):
     logger.debug('Creating Job with command %s' % job.command)
@@ -284,6 +282,7 @@ def wait_for_job(parent, job):
             logger.error('Job with command %s failed, status is %s, returning False' % (job.command, job.status))
             return False
         time.sleep(1)
+
 
 def main():
     """
@@ -323,7 +322,6 @@ def main():
     logger = logging.getLogger(__name__)
 
     # Disabling SSL verification if set
-    ssl_context = None
     if configuration['nosslcheck']:
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
@@ -334,7 +332,7 @@ def main():
         configuration['nuage_password'] = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (configuration['nuage_host'], configuration['nuage_username']))
 
     try:
-        # Connecting to Nuage 
+        # Connecting to Nuage
         logger.info('Connecting to Nuage server %s:%s with username %s' % (configuration['nuage_host'], configuration['nuage_port'], configuration['nuage_username']))
         nc = vsdk.NUVSDSession(username=configuration['nuage_username'], password=configuration['nuage_password'], enterprise=configuration['nuage_enterprise'], api_url="https://%s:%s" % (configuration['nuage_host'], configuration['nuage_port']))
         nc.start()
@@ -363,10 +361,10 @@ def main():
         for nc_subnet in nc_domain.subnets.get():
             logger.debug('Found subnet with network %s/%s in domain %s' % (nc_subnet.address, nc_subnet.netmask, nc_domain.name))
             nc_subnetmap[nc_subnet.id] = {
-            'id': nc_subnet.id,
-            'address': nc_subnet.address,
-            'netmask': nc_subnet.netmask,
-            'zone': nc_subnet.parent_id
+                'id': nc_subnet.id,
+                'address': nc_subnet.address,
+                'netmask': nc_subnet.netmask,
+                'zone': nc_subnet.parent_id
             }
 
     if configuration['acl_type'] == 'POLICYGROUP':
@@ -375,8 +373,8 @@ def main():
         for nc_policygroup in nc_domain.policy_groups.get():
             logger.debug('Found policy group %s in domain %s' % (nc_policygroup.name, nc_domain.name))
             nc_policygroupmap[nc_policygroup.id] = {
-            'id': nc_policygroup.id,
-            'name': nc_policygroup.name
+                'id': nc_policygroup.id,
+                'name': nc_policygroup.name
             }
 
     # Mapping vPorts
@@ -384,16 +382,16 @@ def main():
     for nc_vport in nc_domain.vports.get():
         logger.debug('Found vPort with IP %s and MAC %s in domain %s' % (nc_vport.vm_interfaces.get_first().ip_address, nc_vport.vm_interfaces.get_first().mac, nc_domain.name))
         nc_vportmap[nc_vport.vm_interfaces.get_first().ip_address] = {
-        'id': nc_vport.id,
-        'mac': nc_vport.vm_interfaces.get_first().mac,
-        'subnet': nc_vport.parent_id,
-        'policygroups': []
+            'id': nc_vport.id,
+            'mac': nc_vport.vm_interfaces.get_first().mac,
+            'subnet': nc_vport.parent_id,
+            'policygroups': []
         }
         for nc_policygroup in nc_vport.policy_groups.get():
             logger.debug('Found policy group %s for vPort with %s and MAC %s in domain %s' % (nc_policygroup.name, nc_vport.vm_interfaces.get_first().ip_address, nc_vport.vm_interfaces.get_first().mac, nc_domain.name))
             nc_vportmap[nc_vport.vm_interfaces.get_first().ip_address]['policygroups'].append({
-            'id': nc_policygroup.id,
-            'name': nc_policygroup.name
+                'id': nc_policygroup.id,
+                'name': nc_policygroup.name
             })
 
     # Mapping Network Macros
@@ -401,9 +399,9 @@ def main():
     for nc_networkmacro in nc_enterprise.enterprise_networks.get():
         logger.debug('Found Network Macro with IP %s and netmask %s for Enterprise %s' % (nc_networkmacro.address, nc_networkmacro.netmask, nc_enterprise.name))
         nc_networkmacromap['%s-%s' % (nc_networkmacro.address, nc_networkmacro.netmask)] = {
-        'id': nc_networkmacro.id,
-        'address': nc_networkmacro.address,
-        'netmask': nc_networkmacro.netmask
+            'id': nc_networkmacro.id,
+            'address': nc_networkmacro.address,
+            'netmask': nc_networkmacro.netmask
         }
 
     # Checking if ACL logging rules are present
@@ -412,8 +410,6 @@ def main():
 
     if ingress_learning_acl is None:
         logger.info('Creating Ingress Learning ACLs')
-        #job = vsdk.NUJob(command='BEGIN_POLICY_CHANGES')
-        #wait_for_job(nc_domain, job)
         ingress_learning_acl = vsdk.NUIngressACLTemplate(
             name='Ingress Learning ACLs',
             priority_type='NONE',
@@ -422,7 +418,7 @@ def main():
             default_allow_ip=False,
             allow_l2_address_spoof=False,
             active=True
-            )
+        )
         nc_domain.create_child(ingress_learning_acl, async=False)
         logger.debug('Creating Ingress ACL TCP rule')
         ingress_acl_entry_1 = vsdk.NUIngressACLEntryTemplate(
@@ -438,7 +434,7 @@ def main():
             source_port='*',
             destination_port='*',
             dscp='*'
-            )
+        )
         ingress_learning_acl.create_child(ingress_acl_entry_1, async=False)
         logger.debug('Creating Ingress ACL UDP rule')
         ingress_acl_entry_2 = vsdk.NUIngressACLEntryTemplate(
@@ -454,7 +450,7 @@ def main():
             source_port='*',
             destination_port='*',
             dscp='*'
-            )
+        )
         ingress_learning_acl.create_child(ingress_acl_entry_2, async=False)
         logger.debug('Creating Ingress ACL other rule')
         ingress_acl_entry_3 = vsdk.NUIngressACLEntryTemplate(
@@ -469,17 +465,12 @@ def main():
             source_port=None,
             destination_port=None,
             dscp='*'
-            )
+        )
         ingress_learning_acl.create_child(ingress_acl_entry_3, async=False)
-        #job = vsdk.NUJob(command='APPLY_POLICY_CHANGES')
-        #wait_for_job(nc_domain, job)
-        #ingress_learning_acl = nc_domain.ingress_acl_templates.get_first(filter="name == 'Ingress Learning ACLs'")
         logger.info('Ingress ACL rules created')
 
     if egress_learning_acl is None:
         logger.info('Creating Egress Learning ACLs')
-        #job = vsdk.NUJob(command='BEGIN_POLICY_CHANGES')
-        #wait_for_job(nc_domain, job)
         egress_learning_acl = vsdk.NUEgressACLTemplate(
             name='Egress Learning ACLs',
             priority_type='NONE',
@@ -488,7 +479,7 @@ def main():
             default_allow_ip=False,
             default_install_acl_implicit_rules=True,
             active=True
-            )
+        )
         nc_domain.create_child(egress_learning_acl, async=False)
         logger.debug('Creating Egress ACL TCP rule')
         egress_acl_entry_1 = vsdk.NUEgressACLEntryTemplate(
@@ -504,7 +495,7 @@ def main():
             source_port='*',
             destination_port='*',
             dscp='*'
-            )
+        )
         egress_learning_acl.create_child(egress_acl_entry_1, async=False)
         logger.debug('Creating Egress ACL UDP rule')
         egress_acl_entry_2 = vsdk.NUEgressACLEntryTemplate(
@@ -520,7 +511,7 @@ def main():
             source_port='*',
             destination_port='*',
             dscp='*'
-            )
+        )
         egress_learning_acl.create_child(egress_acl_entry_2, async=False)
         logger.debug('Creating Egress ACL other rule')
         egress_acl_entry_3 = vsdk.NUEgressACLEntryTemplate(
@@ -535,17 +526,14 @@ def main():
             source_port=None,
             destination_port=None,
             dscp='*'
-            )
+        )
         egress_learning_acl.create_child(egress_acl_entry_3, async=False)
-        #job = vsdk.NUJob(command='APPLY_POLICY_CHANGES')
-        #wait_for_job(nc_domain, job)
-        #egress_learning_acl = nc_domain.egress_acl_templates.get_first(filter="name == 'Egress Learning ACLs'")
         logger.info('Egress ACL rules created')
 
     logger.info('Starting capture server on port 514')
     capture_server = SocketServer.TCPServer(('0.0.0.0', 514), ACLTCPHandler)
 
-    try: 
+    try:
         # Activate the server; this will keep running until you
         # interrupt the program with Ctrl-C
         capture_server.serve_forever()

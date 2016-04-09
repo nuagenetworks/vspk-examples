@@ -11,10 +11,10 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 from vspk import v3_2 as vsdk
 
 session = vsdk.NUVSDSession(
-        username='csproot',
-        password='PASSWORD',
-        enterprise='csp',
-        api_url='https://VSD-IP:8443'
+    username='csproot',
+    password='PASSWORD',
+    enterprise='csp',
+    api_url='https://VSD-IP:8443'
 )
 
 session.start()
@@ -45,4 +45,3 @@ for cur_ent in user.enterprises.get():
                 print('        |- Rule: %s' % cur_rule.description)
 
     print('--------------------------------------------------------------------------------')
-
