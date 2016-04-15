@@ -45,6 +45,7 @@ python vcenter_vm_name_to_nuage_policygroups.py -c DC1-Compute -c DC2-Compute -d
 """
 
 import argparse
+import atexit
 import csv
 import getpass
 import logging
@@ -54,11 +55,8 @@ import requests
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
+from vspk import v4_0 as vsdk
 
-try: 
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
 
 def get_args():
     """
@@ -85,6 +83,7 @@ def get_args():
     args = parser.parse_args()
     return args
 
+
 def update_nuage_policy_group(logger, vc, nc, nc_vm_properties, nc_vm_pgs, remove_policygroups):
     # Finding domain
     nc_domain = None
@@ -93,7 +92,7 @@ def update_nuage_policy_group(logger, vc, nc, nc_vm_properties, nc_vm_pgs, remov
         nc_domain = nc.user.domains.get_first(filter="name == '%s'" % nc_vm_properties['nuage.domain'])
         nc_domain_name = nc_vm_properties['nuage.domain']
     elif nc_vm_properties['nuage.l2domain'] is not None:
-        nc_domain = nc.user.l2_domains.get_first(filter="name == '%s'" %  nc_vm_properties['nuage.l2domain'])
+        nc_domain = nc.user.l2_domains.get_first(filter="name == '%s'" % nc_vm_properties['nuage.l2domain'])
         nc_domain_name = nc_vm_properties['nuage.l2domain']
 
     if nc_domain is None:
@@ -122,14 +121,15 @@ def update_nuage_policy_group(logger, vc, nc, nc_vm_properties, nc_vm_pgs, remov
             logger.debug('Adding Policy Group %s to VM %s' % (nc_pg_name, nc_vm_properties['name']))
             nc_vport_pgs.append(nc_vm_pg)
             pg_change = True
-    
+
     if pg_change:
         nc_vm_properties['vport'].assign(nc_vport_pgs, vsdk.NUPolicyGroup)
         logger.info('Saved %s Policy Groups to VM %s' % (len(nc_vport_pgs), nc_vm_properties['name']))
-    else: 
+    else:
         logger.info('No changes found in the Policy Group settings for VM %s, skipping' % nc_vm_properties['name'])
 
     return True
+
 
 def main():
     """
@@ -157,7 +157,6 @@ def main():
     nosslcheck          = args.nosslcheck
     verbose             = args.verbose
     vcenter_host        = args.vcenter_host
-    vcenter_name        = vcenter_host
     vcenter_https_port  = args.vcenter_https_port
     vcenter_password    = None
     if args.vcenter_password:
@@ -181,7 +180,7 @@ def main():
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
         import ssl
-        if hasattr(ssl, 'SSLContext'): 
+        if hasattr(ssl, 'SSLContext'):
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             ssl_context.verify_mode = ssl.CERT_NONE
 
@@ -199,7 +198,7 @@ def main():
         vc = None
         nc = None
 
-        # Connecting to Nuage 
+        # Connecting to Nuage
         try:
             logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
             nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
@@ -225,6 +224,9 @@ def main():
         if not vc:
             logger.error('Could not connect to vCenter host %s with user %s and specified password' % (vcenter_host, vcenter_username))
             return 1
+
+        logger.debug('Registering vCenter disconnect at exit')
+        atexit.register(Disconnect, vc)
 
         logger.info('Connected to both Nuage & vCenter servers')
 
@@ -305,23 +307,22 @@ def main():
                 nc_vm_domain_name = vc_vm_nuage_l2domain.value
             if vc_vm_nuage_zone is not None:
                 nc_vm_properties['nuage.zone'] = vc_vm_nuage_zone.value
-            else: 
+            else:
                 nc_vm_properties['nuage.zone'] = None
             if vc_vm_nuage_network is not None:
                 nc_vm_properties['nuage.network'] = vc_vm_nuage_network.value
-            else: 
+            else:
                 nc_vm_properties['nuage.network'] = None
-            
 
             logger.debug('VM %s has following Nuage settings: Enterprise %s, Domain %s, Zone %s, Subnet %s' % (vc_vm.name, nc_vm_properties['nuage.enterprise'], nc_vm_domain_name, nc_vm_properties['nuage.zone'], nc_vm_properties['nuage.network']))
 
             # Getting VM MAC
-            vc_vm_nic = next((x for x in vc_vm.config.hardware.device if isinstance(x,vim.vm.device.VirtualEthernetCard)),None)
+            vc_vm_nic = next((x for x in vc_vm.config.hardware.device if isinstance(x, vim.vm.device.VirtualEthernetCard)), None)
             if vc_vm_nic is None:
                 logger.error('VM %s has no valid network interfaces, skipping it' % vc_vm.name)
                 continue
 
-            nc_vm_properties['mac'] = vc_vm_nic.macAddress 
+            nc_vm_properties['mac'] = vc_vm_nic.macAddress
             logger.debug('VM %s has MAC %s' % (vc_vm.name, nc_vm_properties['mac']))
 
             # Getting Nuage vport for this VM
@@ -333,7 +334,7 @@ def main():
             # Getting Nuage vport for this VM
             nc_vm_properties['vport'] = vsdk.NUVPort(id=nc_vm_properties['vm_interface'].vport_id)
             try:
-                nc_vm_properties['vport'].fetch() 
+                nc_vm_properties['vport'].fetch()
             except Exception, e:
                 logger.error('VM %s with MAC address %s has a vm_interface but no vport in Nuage, this should not be possible... Skipping it' % (vc_vm.name, nc_vm_properties['mac']))
                 continue

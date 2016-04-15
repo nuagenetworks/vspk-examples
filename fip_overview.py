@@ -9,7 +9,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-01-24 - 1.0
 2016-01-26 - 1.1 - JSON output supported
 
---- Usage --- 
+--- Usage ---
 run 'python fip_overview.py -h' for an overview
 
 --- Documentation ---
@@ -24,15 +24,11 @@ import argparse
 import getpass
 import json
 import logging
-import os.path
 import requests
 
 from prettytable import PrettyTable
+from vspk import v4_0 as vsdk
 
-try: 
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
 
 def get_args():
     """
@@ -52,6 +48,7 @@ def get_args():
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
+
 
 def main():
     """
@@ -87,7 +84,6 @@ def main():
     logger = logging.getLogger(__name__)
 
     # Disabling SSL verification if set
-    ssl_context = None
     if nosslcheck:
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
@@ -98,7 +94,7 @@ def main():
         nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host, nuage_username))
 
     try:
-        # Connecting to Nuage 
+        # Connecting to Nuage
         logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
@@ -113,7 +109,7 @@ def main():
         json_object = []
     else:
         logger.debug('Setting up basic output table')
-        pt = PrettyTable(['Enterprise','Domain','VM Name','VM IP','VM MAC','FIP'])
+        pt = PrettyTable(['Enterprise', 'Domain', 'VM Name', 'VM IP', 'VM MAC', 'FIP'])
 
     logger.debug('Getting FIPs for the logged in user.')
     for nc_fip in nc.user.floating_ips.get():
@@ -124,12 +120,12 @@ def main():
 
         if json_output:
             json_dict = {
-            'Enterprise': nc_vm.enterprise_name, 
-            'Domain': nc_interface.domain_name, 
-            'VM Name': nc_vm.name, 
-            'VM IP': nc_interface.ip_address, 
-            'VM MAC': nc_interface.mac, 
-            'FIP': nc_fip.address
+                'Enterprise': nc_vm.enterprise_name,
+                'Domain': nc_interface.domain_name,
+                'VM Name': nc_vm.name,
+                'VM IP': nc_interface.ip_address,
+                'VM MAC': nc_interface.mac,
+                'FIP': nc_fip.address
             }
             json_object.append(json_dict)
         else:

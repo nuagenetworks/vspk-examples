@@ -8,7 +8,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 --- Version history ---
 2016-01-26 - 1.0
 
---- Usage --- 
+--- Usage ---
 run 'python event_overview.py -h' for an overview
 
 --- Documentation ---
@@ -34,17 +34,13 @@ import datetime
 import getpass
 import json
 import logging
-import os.path
 import re
 import requests
 import time
 
 from prettytable import PrettyTable
+from vspk import v4_0 as vsdk
 
-try: 
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
 
 def get_args():
     """
@@ -66,6 +62,7 @@ def get_args():
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
+
 
 def main():
     """
@@ -123,7 +120,6 @@ def main():
     logger.debug('Time difference set to %s seconds' % time_diff)
 
     # Disabling SSL verification if set
-    ssl_context = None
     if nosslcheck:
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
@@ -134,7 +130,7 @@ def main():
         nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host, nuage_username))
 
     try:
-        # Connecting to Nuage 
+        # Connecting to Nuage
         logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
@@ -149,28 +145,28 @@ def main():
         json_object = []
     elif extended:
         logger.debug('Setting up extended output table')
-        pt = PrettyTable(['Enterprise','Timestamp','Date/Time','Type','Entity', 'Entity parent', 'Extended info'])
-    else:    
+        pt = PrettyTable(['Enterprise', 'Timestamp', 'Date/Time', 'Type', 'Entity', 'Entity parent', 'Extended info'])
+    else:
         logger.debug('Setting up basic output table')
-        pt = PrettyTable(['Enterprise','Timestamp','Date/Time','Type','Entity', 'Entity parent'])
+        pt = PrettyTable(['Enterprise', 'Timestamp', 'Date/Time', 'Type', 'Entity', 'Entity parent'])
 
     unix_check_time = time.time() - time_diff
     logger.debug('Gathering all events from after UNIX timestamp %s' % unix_check_time)
 
     for ent in nc.user.enterprises.get():
         logger.debug('Gathering events for enterprise %s' % ent.name)
-        for event in ent.event_logs.get(filter="eventReceivedTime >= '%s'" % int(unix_check_time*1000)):
+        for event in ent.event_logs.get(filter="eventReceivedTime >= '%s'" % int(unix_check_time * 1000)):
             logger.debug('Found event of type %s with timestamp %s' % (event.type, event.event_received_time))
-            clean_time = datetime.datetime.fromtimestamp(int(event.event_received_time/1000)).strftime('%Y-%m-%d %H:%M:%S')
+            clean_time = datetime.datetime.fromtimestamp(int(event.event_received_time / 1000)).strftime('%Y-%m-%d %H:%M:%S')
 
             if json_output:
                 json_dict = {
-                'Enterprise': ent.name,
-                'Timestamp': event.event_received_time,
-                'Date/Time': clean_time,
-                'Type': event.type,
-                'Entity': event.entity_type,
-                'Entity parent': event.entity_parent_type
+                    'Enterprise': ent.name,
+                    'Timestamp': event.event_received_time,
+                    'Date/Time': clean_time,
+                    'Type': event.type,
+                    'Entity': event.entity_type,
+                    'Entity parent': event.entity_parent_type
                 }
                 if extended:
                     json_dict['Extended info'] = event.entities

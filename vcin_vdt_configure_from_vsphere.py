@@ -105,21 +105,18 @@ python vcin_vdt_configure_from_vsphere.py -d --nuage-enterprise csp --nuage-host
 """
 
 import argparse
+import atexit
 import csv
 import getpass
 import logging
 import os.path
 import requests
-import sys
 import socket
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
+from vspk import v4_0 as vsdk
 
-try: 
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
 
 def get_args():
     """
@@ -160,6 +157,7 @@ def get_args():
     args = parser.parse_args()
     return args
 
+
 def handle_vdt_datacenter(logger, nc, vc, nuage_vcenter, vc_dc, nc_dc_list, vcenter_name, all_clusters, all_hosts, clusters, hosts, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent):
     # Checking if the Datacenter exists in the Nuage vCenter Deployment Tool
     logger.debug('Checking vCenter Datacenter %s in Nuage vCenter Deployment Tool' % vc_dc.name)
@@ -195,6 +193,7 @@ def handle_vdt_datacenter(logger, nc, vc, nuage_vcenter, vc_dc, nc_dc_list, vcen
             logger.debug('vCenter Cluster %s is in list that has to be present in the Nuage vCenter Deployment Tool, checking if it already exists.' % vc_cl.name)
             handle_vdt_cluster(logger=logger, nc=nc, vc=vc, vc_dc=vc_dc, vc_cl=vc_cl, nuage_dc=active_nc_dc, nc_cl_list=nc_cl_list, all_hosts=all_hosts, hosts=hosts, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
 
+
 def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_hosts, hosts, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent):
     # Checking if the Cluster exists in the Nuage vCenter Deployment Tool
     logger.debug('Checking vCenter Cluster %s in Nuage vCenter Deployment Tool' % vc_cl.name)
@@ -226,28 +225,28 @@ def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_h
         if all_hosts:
             # Determining Host management IP
             vc_host_ip = None
-            
-            #Determine management IP based on 'management' property
+
+            # Determine management IP based on 'management' property
             vnic_mgmtIP_list = []
             for vc_host_NicManager in vc_host.config.virtualNicManagerInfo.netConfig:
                 if vc_host_NicManager.nicType == 'management':
-                    if( len(vc_host_NicManager.selectedVnic) >0):
+                    if(len(vc_host_NicManager.selectedVnic) > 0):
                         for vnic in vc_host_NicManager.candidateVnic:
                             if vnic.key in vc_host_NicManager.selectedVnic:
                                 if ip_address_is_valid(vnic.spec.ip.ipAddress):
                                     vnic_mgmtIP_list.append(vnic.spec.ip.ipAddress)
                     break
 
-            if len(vnic_mgmtIP_list)>0:
+            if len(vnic_mgmtIP_list) > 0:
                 for vnic_ip in vnic_mgmtIP_list:
                     if ip_address_is_valid(vnic_ip):
                         logger.debug('Found managenent IP %s for vCenter Host %s' % (vnic_ip, vc_host.name))
                         vc_host_ip = vnic_ip
                         break
             else:
-            #Did not find any Management IP, use first IP
+                # Did not find any Management IP, use first IP
                 for vnic in vc_host.config.network.vnic:
-                    logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name,vc_cl.name))
+                    logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name, vc_cl.name))
                     if ip_address_is_valid(vnic.spec.ip.ipAddress):
                         logger.debug('Found management IP %s for vCenter Host %s' % (vnic.spec.ip.ipAddress, vc_host.name))
                         vc_host_ip = vnic.spec.ip.ipAddress
@@ -262,6 +261,7 @@ def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_h
                     logger.debug('vCenter Host %s with IP %s is in list that has to be present in the Nuage vCenter Deployment Tool, checking if it already exists.' % (vc_host.name, vnic.spec.ip.ipAddress))
                     handle_vdt_host(logger=logger, nc=nc, vc=vc, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vnic.spec.ip.ipAddress, nuage_cl=active_nc_cl, nc_host_list=nc_host_list, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
                     break
+
 
 def handle_vdt_host(logger, nc, vc, vc_cl, vc_host, vc_host_ip, nuage_cl, nc_host_list, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent):
     logger.debug('Checking vCenter Host %s in the Nuage vCenter Deployment Tool' % vc_host.name)
@@ -279,14 +279,14 @@ def handle_vdt_host(logger, nc, vc, vc_cl, vc_host, vc_host_ip, nuage_cl, nc_hos
         logger.info('Created Host %s with IP %s from the vCenter Cluster %s in the Nuage vCenter Deployment Tool' % (vc_host.name, vc_host_ip, vc_cl.name))
 
     # Once we come here, we can update the host (circumventing a known issue with the creation of a host not setting its networks)
-    active_nc_host.mgmt_network_portgroup       = hv_management_network
-    active_nc_host.data_network_portgroup       = hv_data_network
-    active_nc_host.vm_network_portgroup         = hv_vm_network
-    active_nc_host.multicast_source_portgroup   = hv_mc_network
+    active_nc_host.mgmt_network_portgroup = hv_management_network
+    active_nc_host.data_network_portgroup = hv_data_network
+    active_nc_host.vm_network_portgroup = hv_vm_network
+    active_nc_host.multicast_source_portgroup = hv_mc_network
 
     # Setting base values for vCenter Host VM Agent configuration in case they are needed
-    agent_portgroup_name    = hv_management_network
-    agent_datastore_name    = None
+    agent_portgroup_name = hv_management_network
+    agent_datastore_name = None
 
     # if hosts_list is not empty, use those values if they are set, if it is, use the general ones
     if hosts_list:
@@ -464,6 +464,7 @@ def handle_vdt_host(logger, nc, vc, vc_cl, vc_host, vc_host_ip, nuage_cl, nc_hos
     if host_configure_agent:
         update_host_vm_agent_configuration(logger=logger, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vc_host_ip, agent_portgroup_name=agent_portgroup_name, agent_datastore_name=agent_datastore_name)
 
+
 def update_host_vm_agent_configuration(logger, vc_cl, vc_host, vc_host_ip, agent_portgroup_name, agent_datastore_name):
     logger.debug('Configuring the Agent VM settings for Host %s with IP %s from the vCenter Cluster %s' % (vc_host.name, vc_host_ip, vc_cl.name))
     # Setting base variables
@@ -492,7 +493,7 @@ def update_host_vm_agent_configuration(logger, vc_cl, vc_host, vc_host_ip, agent
             if fs.volume.type == "VMFS" and fs.volume.local:
                 logger.debug('Found local Datastore %s for Host %s with IP %s from the vCenter Cluster %s' % (fs.volume.name, vc_host.name, vc_host_ip, vc_cl.name))
                 agent_datastore_name = fs.volume.name
-                break;
+                break
 
     # Find the correct Datastore
     logger.debug('Searching for Datastore %s for Host %s with IP %s from the vCenter Cluster %s' % (agent_datastore_name, vc_host.name, vc_host_ip, vc_cl.name))
@@ -506,7 +507,7 @@ def update_host_vm_agent_configuration(logger, vc_cl, vc_host, vc_host_ip, agent
     # If no datastore found, stop and do not configure the Agent VM settings of the host
     if not agent_datastore:
         logger.error('No datastore named %s found for Host %s with IP %s from the vCenter Cluster %s. Skipping Host Agent VM Settings configuration' % (agent_datastore_name, vc_host.name, vc_host_ip, vc_cl.name))
-        return -1 
+        return -1
 
     # Setting actual Agent VM settings
     logger.debug('Setting the Agent VM settings for Host %s with IP %s from the vCenter Cluster %s to: datastore %s and port group %s' % (vc_host.name, vc_host_ip, vc_cl.name, agent_datastore.name, agent_portgroup.name))
@@ -520,10 +521,15 @@ def update_host_vm_agent_configuration(logger, vc_cl, vc_host, vc_host_ip, agent
     logger.debug('Successful configured the Agent VM settings for Host %s with IP %s from the vCenter Cluster %s to: datastore %s and port group %s' % (vc_host.name, vc_host_ip, vc_cl.name, agent_datastore.name, agent_portgroup.name))
     return 0
 
+
 def ip_address_is_valid(address):
-    try: socket.inet_aton(address)
-    except socket.error: return False
-    else: return True
+    try:
+        socket.inet_aton(address)
+    except socket.error:
+        return False
+    else:
+        return True
+
 
 def main():
     """
@@ -650,7 +656,7 @@ def main():
                 if ip_address_is_valid(row[0]):
                     hosts_list[row[0]] = row
                     hosts.append(row[0])
-                else: 
+                else:
                     logger.warning('Found an invalid IP %s in the hosts file, skipping line' % row[0])
 
     # Disabling SSL verification if set
@@ -659,7 +665,7 @@ def main():
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
         import ssl
-        if hasattr(ssl, 'SSLContext'): 
+        if hasattr(ssl, 'SSLContext'):
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             ssl_context.verify_mode = ssl.CERT_NONE
 
@@ -682,7 +688,7 @@ def main():
         vc = None
         nc = None
 
-        # Connecting to Nuage 
+        # Connecting to Nuage
         try:
             logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
             nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
@@ -708,6 +714,9 @@ def main():
         if not vc:
             logger.error('Could not connect to vCenter host %s with user %s and specified password' % (vcenter_host, vcenter_username))
             return 1
+
+        logger.debug('Registering vCenter disconnect at exit')
+        atexit.register(Disconnect, vc)
 
         logger.info('Connected to both Nuage & vCenter servers')
 

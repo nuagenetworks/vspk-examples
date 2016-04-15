@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-migrate_vmware_vm_to_nuage.py migrate a VMware VM, with VMware tools or open-vm-tools, to a Nuage VSP environment. 
+migrate_vmware_vm_to_nuage.py migrate a VMware VM, with VMware tools or open-vm-tools, to a Nuage VSP environment.
 
-In default mode it will gather the VMs IP and check if it is part of the specified subnet. If it is, it will populate the VM with the correct metadata and reconnect the interface to the OVS-PG. 
+In default mode it will gather the VMs IP and check if it is part of the specified subnet. If it is, it will populate the VM with the correct metadata and reconnect the interface to the OVS-PG.
 
 In split activation mode, it will gather the MAC, UUID and IP from the VM and create a vPort and VM before reconnecting the nic to the OVS-PG.
 
@@ -12,7 +12,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 --- Version history ---
 2016-03-20 - 1.0
 
---- Usage --- 
+--- Usage ---
 run 'python migrate_vmware_vm_to_nuage.py -h' for an overview
 
 --- Best practice ---
@@ -39,18 +39,14 @@ import atexit
 import getpass
 import ipaddress
 import logging
-import os.path
 import re
 import requests
-
-try: 
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
 
 from time import sleep
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
+from vspk import v4_0 as vsdk
+
 
 def get_args():
     """
@@ -60,7 +56,7 @@ def get_args():
     parser = argparse.ArgumentParser(description="Tool to migrate a VMware VM, with VMware tools or open-vm-tools, to a Nuage VSP environment. In default mode it will gather the VMs IP and check if it is part of the specified subnet. If it is, it will populate the VM with the correct metadata and reconnect the interface to the OVS-PG. In split activation mode, it will gather the MAC, UUID and IP from the VM and create a vPort and VM before reconnecting the nic to the OVS-PG.")
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
     parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
-    parser.add_argument('-m', '--mode', required=False, help='Select between metadata and split-activation', dest='mode', type=str, choices=['metadata','split-activation'], default='medatada' )
+    parser.add_argument('-m', '--mode', required=False, help='Select between metadata and split-activation', dest='mode', type=str, choices=['metadata', 'split-activation'], default='medatada')
     parser.add_argument('--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
     parser.add_argument('--nuage-host', required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
     parser.add_argument('--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
@@ -82,10 +78,11 @@ def get_args():
     args = parser.parse_args()
     return args
 
-"""
- Get the vsphere object associated with a given text name
-"""
+
 def get_vcenter_object(logger, vc, vimtype, name):
+    """
+    Get the vsphere object associated with a given text name
+    """
     content = vc.RetrieveContent()
     obj = None
     container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
@@ -97,6 +94,7 @@ def get_vcenter_object(logger, vc, vimtype, name):
             break
     return obj
 
+
 def get_nuage_object(logger, parent, nuagetype, search_query, single_entity=False):
     logger.debug('Finding Nuage entities for object matching search query "%s"' % search_query)
     if single_entity is False:
@@ -105,46 +103,47 @@ def get_nuage_object(logger, parent, nuagetype, search_query, single_entity=Fals
         entities = parent.fetcher_for_rest_name(nuagetype.lower()).get_first(filter=search_query)
     return entities
 
+
 def main():
     """
     Main function to handle statistics
     """
 
     # Handling arguments
-    args                = get_args()
-    debug               = args.debug
-    log_file            = None
+    args = get_args()
+    debug = args.debug
+    log_file = None
     if args.logfile:
-        log_file        = args.logfile
-    mode                = args.mode
-    nuage_enterprise    = args.nuage_enterprise
-    nuage_host          = args.nuage_host
-    nuage_port          = args.nuage_port
-    nuage_password      = None
+        log_file = args.logfile
+    mode = args.mode
+    nuage_enterprise = args.nuage_enterprise
+    nuage_host = args.nuage_host
+    nuage_port = args.nuage_port
+    nuage_password = None
     if args.nuage_password:
-        nuage_password  = args.nuage_password
-    nuage_username      = args.nuage_username
-    nosslcheck          = args.nosslcheck
-    verbose             = args.verbose
+        nuage_password = args.nuage_password
+    nuage_username = args.nuage_username
+    nosslcheck = args.nosslcheck
+    verbose = args.verbose
     nuage_vm_enterprise = args.nuage_vm_enterprise
-    nuage_vm_domain     = None
+    nuage_vm_domain = None
     if args.nuage_vm_domain:
         nuage_vm_domain = args.nuage_vm_domain
-    nuage_vm_zone       = None
+    nuage_vm_zone = None
     if args.nuage_vm_zone:
-        nuage_vm_zone   = args.nuage_vm_zone
+        nuage_vm_zone = args.nuage_vm_zone
     nuage_vm_subnet = args.nuage_vm_subnet
-    nuage_vm_user       = None
+    nuage_vm_user = None
     if args.nuage_vm_user:
-        nuage_vm_user   = args.nuage_vm_user
-    vcenter_host        = args.vcenter_host
-    vcenter_port        = args.vcenter_port
-    vcenter_password    = None
+        nuage_vm_user = args.nuage_vm_user
+    vcenter_host = args.vcenter_host
+    vcenter_port = args.vcenter_port
+    vcenter_password = None
     if args.vcenter_password:
         vcenter_password = args.vcenter_password
-    vcenter_username    = args.vcenter_username
-    vcenter_portgroup   = args.vcenter_portgroup
-    vcenter_vm          = args.vcenter_vm
+    vcenter_username = args.vcenter_username
+    vcenter_portgroup = args.vcenter_portgroup
+    vcenter_vm = args.vcenter_vm
 
     # Logging settings
     if debug:
@@ -163,11 +162,11 @@ def main():
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
         import ssl
-        if hasattr(ssl, 'SSLContext'): 
+        if hasattr(ssl, 'SSLContext'):
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             ssl_context.verify_mode = ssl.CERT_NONE
 
-     # Getting user password for Nuage connection
+    # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
         nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host, nuage_username))
@@ -181,7 +180,7 @@ def main():
         vc = None
         nc = None
 
-        # Connecting to Nuage 
+        # Connecting to Nuage
         logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
@@ -267,13 +266,13 @@ def main():
 
         for cur_net in vc_vm_net_info:
             if cur_net.macAddress:
-                logger.debug('Mac address %s found for VM %s' % (cur_net.macAddress,vcenter_vm))
+                logger.debug('Mac address %s found for VM %s' % (cur_net.macAddress, vcenter_vm))
                 vc_vm_mac = cur_net.macAddress
             if vc_vm_mac and cur_net.ipConfig:
                 if cur_net.ipConfig.ipAddress:
                     for cur_ip in cur_net.ipConfig.ipAddress:
-                        logger.debug('Checking ip address %s for VM %s' % (cur_ip.ipAddress,vcenter_vm))
-                        if re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}',cur_ip.ipAddress) and cur_ip.ipAddress != '127.0.0.1':
+                        logger.debug('Checking ip address %s for VM %s' % (cur_ip.ipAddress, vcenter_vm))
+                        if re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', cur_ip.ipAddress) and cur_ip.ipAddress != '127.0.0.1':
                             vc_vm_ip = cur_ip.ipAddress
                             break
             if vc_vm_mac and vc_vm_ip:
@@ -349,14 +348,12 @@ def main():
             nc_subnet.create_child(nc_vport)
             # Creating VM
             logger.debug('Creating a Nuage VM for VM %s' % vcenter_vm)
-            nc_vm = vsdk.NUVM(name=vcenter_vm, uuid=vc_vm_uuid,
-                interfaces = [{
+            nc_vm = vsdk.NUVM(name=vcenter_vm, uuid=vc_vm_uuid, interfaces=[{
                 'name': vcenter_vm,
                 'VPortID': nc_vport.id,
                 'MAC': vc_vm_mac,
                 'IPAddress': vc_vm_ip
-                }]
-                )
+            }])
             nc.user.create_child(nc_vm)
 
         # Fetching nic from the VM
@@ -380,8 +377,8 @@ def main():
         vc_nicspec.device.wakeOnLanEnabled = True
         vc_nicspec.device.backing = vim.vm.device.VirtualEthernetCard.DistributedVirtualPortBackingInfo()
         vc_nicspec.device.backing.port = vim.dvs.PortConnection()
-        vc_nicspec.device.backing.port.portgroupKey= vc_dvs_pg.key
-        vc_nicspec.device.backing.port.switchUuid= vc_dvs_pg.config.distributedVirtualSwitch.uuid
+        vc_nicspec.device.backing.port.portgroupKey = vc_dvs_pg.key
+        vc_nicspec.device.backing.port.switchUuid = vc_dvs_pg.config.distributedVirtualSwitch.uuid
         vc_nicspec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         vc_nicspec.device.connectable.startConnected = True
         vc_nicspec.device.connectable.connected = True
