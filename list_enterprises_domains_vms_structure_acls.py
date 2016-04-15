@@ -8,13 +8,13 @@ python list_enterprises_domains_vms_structure_acls.py
 --- Author ---
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 """
-from vspk import v3_2 as vsdk
+from vspk import v4_0 as vsdk
 
 session = vsdk.NUVSDSession(
-        username='csproot',
-        password='PASSWORD',
-        enterprise='csp',
-        api_url='https://VSD-IP:8443'
+    username='csproot',
+    password='PASSWORD',
+    enterprise='csp',
+    api_url='https://VSD-IP:8443'
 )
 
 session.start()
@@ -45,4 +45,3 @@ for cur_ent in user.enterprises.get():
                 print('        |- Rule: %s' % cur_rule.description)
 
     print('--------------------------------------------------------------------------------')
-

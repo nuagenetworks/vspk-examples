@@ -10,7 +10,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 --- Version history ---
 2016-01-26 - 1.0
 
---- Usage --- 
+--- Usage ---
 run 'python gather_statistics.py -h' for an overview
 
 --- Documentation ---
@@ -38,41 +38,37 @@ import datetime
 import getpass
 import json
 import logging
-import os.path
 import re
 import requests
 import time
 
 from prettytable import PrettyTable
-
-try: 
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
+from vspk import v4_0 as vsdk
 
 statistics_valid_types = [
-'BYTES_IN',
-'BYTES_OUT',
-'EGRESS_BYTE_COUNT',
-'EGRESS_PACKET_COUNT',
-'INGRESS_BYTE_COUNT',
-'INGRESS_PACKET_COUNT',
-'PACKETS_DROPPED_BY_RATE_LIMIT',
-'PACKETS_IN',
-'PACKETS_IN_DROPPED',
-'PACKETS_IN_ERROR',
-'PACKETS_OUT',
-'PACKETS_OUT_DROPPED',
-'PACKETS_OUT_ERROR'
+    'BYTES_IN',
+    'BYTES_OUT',
+    'EGRESS_BYTE_COUNT',
+    'EGRESS_PACKET_COUNT',
+    'INGRESS_BYTE_COUNT',
+    'INGRESS_PACKET_COUNT',
+    'PACKETS_DROPPED_BY_RATE_LIMIT',
+    'PACKETS_IN',
+    'PACKETS_IN_DROPPED',
+    'PACKETS_IN_ERROR',
+    'PACKETS_OUT',
+    'PACKETS_OUT_DROPPED',
+    'PACKETS_OUT_ERROR'
 ]
 
 entity_valid_types = [
-'DOMAIN',
-'L2DOMAIN',
-'ZONE', 
-'SUBNET', 
-'VM'
+    'DOMAIN',
+    'L2DOMAIN',
+    'ZONE',
+    'SUBNET',
+    'VM'
 ]
+
 
 def get_args():
     """
@@ -96,6 +92,7 @@ def get_args():
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
+
 
 def main():
     """
@@ -159,7 +156,6 @@ def main():
     logger.debug('Time difference set to %s seconds' % time_diff)
 
     # Disabling SSL verification if set
-    ssl_context = None
     if nosslcheck:
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
@@ -170,7 +166,7 @@ def main():
         nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host, nuage_username))
 
     try:
-        # Connecting to Nuage 
+        # Connecting to Nuage
         logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
@@ -203,7 +199,7 @@ def main():
         'Start date/time',
         'End date/time',
         '# datapoints'
-        ]
+    ]
     output_fields.extend(statistic_types)
 
     # Verifying if there are enities
@@ -239,7 +235,7 @@ def main():
                 entity_data_freq = entity_stat_policies[0].data_collection_frequency
             logger.debug('Data collection frequency for %s %s saved as %s' % (output_type, entity.name, entity_data_freq))
 
-        num_data_points = int(time_diff/entity_data_freq)
+        num_data_points = int(time_diff / entity_data_freq)
 
         # Collecting statistics
         logger.debug('Collecting %s datapoints of statistics %s on %s %s from timestamp %s to timestamp %s' % (num_data_points, stat_metric_types_str, output_type, entity.name, stat_start_time, stat_end_time))
@@ -248,38 +244,38 @@ def main():
             'endTime': stat_end_time,
             'numberOfDataPoints': num_data_points,
             'metricTypes': stat_metric_types_str
-            }).stats_data
+        }).stats_data
 
         # Determining name
         output_name = entity.name
         if entity_type == "VM":
-            output_name = '%s %s' % (entity.parent.name,entity.mac)
+            output_name = '%s %s' % (entity.parent.name, entity.mac)
 
         # Generating output row
         if json_output:
             json_dict = {
-            output_type: output_name,
-            'Start timestamp': stat_start_time,
-            'End timestamp': stat_end_time,
-            'Start date/time': datetime.datetime.fromtimestamp(stat_start_time).strftime('%Y-%m-%d %H:%M:%S'),
-            'End date/time': datetime.datetime.fromtimestamp(stat_end_time).strftime('%Y-%m-%d %H:%M:%S'),
-            '# datapoints': num_data_points
+                output_type: output_name,
+                'Start timestamp': stat_start_time,
+                'End timestamp': stat_end_time,
+                'Start date/time': datetime.datetime.fromtimestamp(stat_start_time).strftime('%Y-%m-%d %H:%M:%S'),
+                'End date/time': datetime.datetime.fromtimestamp(stat_end_time).strftime('%Y-%m-%d %H:%M:%S'),
+                '# datapoints': num_data_points
             }
             json_dict.update(stats_data)
             json_object.append(json_dict)
         else:
             row = [
-            output_name,
-            stat_start_time,
-            stat_end_time,
-            datetime.datetime.fromtimestamp(stat_start_time).strftime('%Y-%m-%d %H:%M:%S'),
-            datetime.datetime.fromtimestamp(stat_end_time).strftime('%Y-%m-%d %H:%M:%S'),
-            num_data_points
+                output_name,
+                stat_start_time,
+                stat_end_time,
+                datetime.datetime.fromtimestamp(stat_start_time).strftime('%Y-%m-%d %H:%M:%S'),
+                datetime.datetime.fromtimestamp(stat_end_time).strftime('%Y-%m-%d %H:%M:%S'),
+                num_data_points
             ]
             for statistic_type in statistic_types:
                 row.append(stats_data[statistic_type])
             pt.add_row(row)
-            
+
     logger.debug('Printing output')
     if json_output:
         print json.dumps(json_object, sort_keys=True, indent=4)

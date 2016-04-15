@@ -20,7 +20,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root -r Pool -f Folder --nuage-vm-enterprise VMware-Integration --nuage-vm-domain Main --nuage-vm-zone "Zone 1" --nuage-vm-subnet "Subnet 0" --nuage-vm-ip 10.0.0.123 --nuage-vm-user vmwadmin
 
 ---- Deploy a template, for the Nuage VM metadata show menus to select values from ----
-python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root 
+python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root
 """
 import argparse
 import atexit
@@ -29,18 +29,12 @@ import ipaddress
 import logging
 import os.path
 import requests
-import socket
-import struct
-import sys
 
 from time import sleep
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
+from vspk import v4_0 as vsdk
 
-try: 
-    from vspk import v3_2 as vsdk
-except ImportError:
-    from vspk.vsdk import v3_2 as vsdk
 
 def get_args():
     """
@@ -72,9 +66,10 @@ def get_args():
     parser.add_argument('--vcenter-password', required=False, help='The password with which to connect to the vCenter host. If not specified, the user is prompted at runtime for a password', dest='vcenter_password', type=str)
     parser.add_argument('--vcenter-user', required=True, help='The username with which to connect to the vCenter host', dest='vcenter_username', type=str)
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
-    
+
     args = parser.parse_args()
     return args
+
 
 def clear(logger):
     """
@@ -83,6 +78,7 @@ def clear(logger):
     if logger:
         logger.debug('Clearing terminal')
     os.system(['clear', 'cls'][os.name == 'nt'])
+
 
 def find_vm(vc, logger, name):
     """
@@ -100,6 +96,7 @@ def find_vm(vc, logger, name):
             return vm
     return None
 
+
 def find_resource_pool(vc, logger, name):
     """
     Find a resource pool by its name and return it
@@ -116,6 +113,7 @@ def find_resource_pool(vc, logger, name):
             return rp
     return None
 
+
 def find_folder(vc, logger, name):
     """
     Find a folder by its name and return it
@@ -131,6 +129,7 @@ def find_folder(vc, logger, name):
             logger.debug('Found folder %s' % folder.name)
             return folder
     return None
+
 
 def main():
     """
@@ -203,11 +202,11 @@ def main():
         logger.debug('Disabling SSL certificate verification.')
         requests.packages.urllib3.disable_warnings()
         import ssl
-        if hasattr(ssl, 'SSLContext'): 
+        if hasattr(ssl, 'SSLContext'):
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             ssl_context.verify_mode = ssl.CERT_NONE
 
-     # Getting user password for Nuage connection
+    # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
         nuage_password = getpass.getpass(prompt='Enter password for Nuage host %s for user %s: ' % (nuage_host, nuage_username))
@@ -221,7 +220,7 @@ def main():
         vc = None
         nc = None
 
-        # Connecting to Nuage 
+        # Connecting to Nuage
         try:
             logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
             nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
@@ -255,7 +254,7 @@ def main():
         # Verifying the Nuage Enterprise existence or selecting it
         if nuage_vm_enterprise:
             logger.debug('Finding Nuage enterprise %s' % nuage_vm_enterprise)
-            vm_enterprise = nc.user.enterprises.get_first(filter="name == '%s'"  % nuage_vm_enterprise)
+            vm_enterprise = nc.user.enterprises.get_first(filter="name == '%s'" % nuage_vm_enterprise)
             if vm_enterprise is None:
                 logger.error('Unable to find Nuage enterprise %s' % nuage_vm_enterprise)
                 return 1
@@ -266,21 +265,21 @@ def main():
             index = 0
             all_ent = nc.user.enterprises.get()
             for cur_ent in all_ent:
-                print('%s. %s' % (index+1, cur_ent.name))
+                print('%s. %s' % (index + 1, cur_ent.name))
                 index += 1
             vm_enterprise = None
             while vm_enterprise is None:
                 choice = raw_input('Please enter the number of the enterprise [1-%s]: ' % len(all_ent))
                 choice = int(choice)
-                if choice > 0 and choice-1 < len(all_ent):
-                    vm_enterprise = all_ent[choice-1]
+                if choice > 0 and choice - 1 < len(all_ent):
+                    vm_enterprise = all_ent[choice - 1]
                     break
                 print('Invalid choice, please try again')
 
         # Verifying the Nuage User existence or selecting it
         if nuage_vm_user:
             logger.debug('Finding Nuage user %s' % nuage_vm_user)
-            vm_user = vm_enterprise.users.get_first(filter="userName == '%s'"  % nuage_vm_user)
+            vm_user = vm_enterprise.users.get_first(filter="userName == '%s'" % nuage_vm_user)
             if vm_user is None:
                 logger.error('Unable to find Nuage user %s' % nuage_vm_user)
                 return 1
@@ -293,14 +292,14 @@ def main():
             index = 0
             all_users = vm_enterprise.users.get()
             for cur_user in all_users:
-                print('%s. %s' % (index+1, cur_user.user_name))
+                print('%s. %s' % (index + 1, cur_user.user_name))
                 index += 1
             vm_user = None
             while vm_user is None:
                 choice = raw_input('Please enter the number of the user [1-%s]: ' % len(all_users))
                 choice = int(choice)
-                if choice > 0 and choice-1 < len(all_users):
-                    vm_user = all_users[choice-1]
+                if choice > 0 and choice - 1 < len(all_users):
+                    vm_user = all_users[choice - 1]
                     break
                 print('Invalid choice, please try again')
 
@@ -321,14 +320,14 @@ def main():
             index = 0
             all_dom = vm_enterprise.domains.get()
             for cur_dom in all_dom:
-                print('%s. %s' % (index+1, cur_dom.name))
+                print('%s. %s' % (index + 1, cur_dom.name))
                 index += 1
             vm_domain = None
             while vm_domain is None:
                 choice = raw_input('Please enter the number of the domain [1-%s]: ' % len(all_dom))
                 choice = int(choice)
-                if choice > 0 and choice-1 < len(all_dom):
-                    vm_domain = all_dom[choice-1]
+                if choice > 0 and choice - 1 < len(all_dom):
+                    vm_domain = all_dom[choice - 1]
                     break
                 print('Invalid choice, please try again')
 
@@ -350,14 +349,14 @@ def main():
             index = 0
             all_zone = vm_domain.zones.get()
             for cur_zone in all_zone:
-                print('%s. %s' % (index+1, cur_zone.name))
+                print('%s. %s' % (index + 1, cur_zone.name))
                 index += 1
             vm_zone = None
             while vm_zone is None:
                 choice = raw_input('Please enter the number of the zone [1-%s]: ' % len(all_zone))
                 choice = int(choice)
-                if choice > 0 and choice-1 < len(all_zone):
-                    vm_zone = all_zone[choice-1]
+                if choice > 0 and choice - 1 < len(all_zone):
+                    vm_zone = all_zone[choice - 1]
                     break
                 print('Invalid choice, please try again')
 
@@ -380,14 +379,14 @@ def main():
             index = 0
             all_subnet = vm_zone.subnets.get()
             for cur_subnet in all_subnet:
-                print('%s. %s - %s/%s' % (index+1, cur_subnet.name, cur_subnet.address, cur_subnet.netmask))
+                print('%s. %s - %s/%s' % (index + 1, cur_subnet.name, cur_subnet.address, cur_subnet.netmask))
                 index += 1
             vm_subnet = None
             while vm_subnet is None:
                 choice = raw_input('Please enter the number of the subnet [1-%s]: ' % len(all_subnet))
                 choice = int(choice)
-                if choice > 0 and choice-1 < len(all_subnet):
-                    vm_subnet = all_subnet[choice-1]
+                if choice > 0 and choice - 1 < len(all_subnet):
+                    vm_subnet = all_subnet[choice - 1]
                     break
                 print('Invalid choice, please try again')
 
@@ -451,7 +450,7 @@ def main():
                 logger.critical('Unable to find folder %s' % folder_name)
                 return 1
             logger.info('Folder %s found' % folder_name)
-        else: 
+        else:
             logger.info('Setting folder to template folder as default')
             folder = template_vm.parent
 
@@ -479,7 +478,7 @@ def main():
             task = template_vm.Clone(name=name, folder=folder, spec=clone_spec)
             logger.info('Cloning task created')
             logger.info('Checking task for completion. This might take a while')
-        
+
         while run_loop:
             info = task.info
             logger.debug('Checking clone task')
@@ -553,7 +552,7 @@ def main():
             logger.debug('Waiting fo VM to power on')
             run_loop = True
             while run_loop:
-                info = task.info
+                info = power_on_task.info
                 if info.state == vim.TaskInfo.State.success:
                     run_loop = False
                     break
@@ -576,4 +575,3 @@ def main():
 # Start program
 if __name__ == "__main__":
     main()
-
