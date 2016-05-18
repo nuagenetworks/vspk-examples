@@ -12,7 +12,8 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-05-18 - 0.3.0 - Check location and network type and if a fixer exists
 2016-05-18 - 0.4.0 - Order of table fields fix
 2016-05-18 - 0.5.0 - Fix for fetching data and log output
-2016-05-18 - 0.5.5 - Fix for fetching fetcher
+2016-05-18 - 0.5.1 - Fix for fetching fetcher
+2016-05-18 - 0.5.2 - Fix for fetching object instead of array
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -197,10 +198,10 @@ def main():
                 output['Protocol'] = acl_rule.protocol
                 output['Source type'] = acl_rule.location_type
                 if acl_rule.location_type and nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()) is not None:
-                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
+                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get_first(filter='ID == "%s"' % acl_rule.location_id).name
                 output['Destination type'] = acl_rule.network_type
                 if acl_rule.network_type and nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()) is not None:
-                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
+                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get_first(filter='ID == "%s"' % acl_rule.network_id).name
                 output['Source port'] = acl_rule.source_port
                 output['Destination port'] = acl_rule.destination_port
                 output['DSCP'] = acl_rule.dscp
@@ -261,10 +262,10 @@ def main():
                 output['Protocol'] = acl_rule.protocol
                 output['Source type'] = acl_rule.location_type
                 if acl_rule.location_type and nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()) is not None:
-                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
+                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get_first(filter='ID == "%s"' % acl_rule.location_id).name
                 output['Destination type'] = acl_rule.network_type
                 if acl_rule.network_type and nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()) is not None:
-                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
+                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get_first(filter='ID == "%s"' % acl_rule.network_id).name
                 output['Source port'] = acl_rule.source_port
                 output['Destination port'] = acl_rule.destination_port
                 output['DSCP'] = acl_rule.dscp
@@ -325,10 +326,10 @@ def main():
                 output['Protocol'] = acl_rule.protocol
                 output['Source type'] = acl_rule.location_type
                 if acl_rule.location_type and nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()) is not None:
-                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
+                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get_first(filter='ID == "%s"' % acl_rule.location_id).name
                 output['Destination type'] = acl_rule.network_type
                 if acl_rule.network_type and nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()) is not None:
-                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
+                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get_first(filter='ID == "%s"' % acl_rule.network_id).name
                 output['Source port'] = acl_rule.source_port
                 output['Destination port'] = acl_rule.destination_port
                 output['DSCP'] = acl_rule.dscp
