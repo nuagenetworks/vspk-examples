@@ -22,6 +22,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-05-18 - 0.5.2 - Fix for fetching object instead of array
 2016-05-18 - 0.6.0 - Output cleanup
 2016-05-18 - 0.6.1 - Missing coma fix
+2016-05-18 - 0.6.2 - Fixing typo and applying to all sections with a function
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -245,6 +246,27 @@ def get_args():
     return args
 
 
+def handle_output(output):
+    if output['Ether type'] in ether_types.keys():
+        output['Ether type'] = ether_types[output['Ether Type']]
+
+    if output['Protocol'] in protocols.keys():
+        output['Protocol'] = protocols[output['Protocol']]
+
+    if output['Source type'] == 'ANY':
+        output['Source name'] = '*'
+
+    if output['Destination type'] == 'ANY':
+        output['Source name'] = '*'
+
+    # Cleanup None values
+    for key in output.keys():
+        if output[key] is None:
+            output[key] = ''
+
+    return output
+
+
 def main():
     """
     Main function to gather the information on the VM applied policies
@@ -403,6 +425,8 @@ def main():
                 output['Stateful'] = acl_rule.stateful
                 output['Action'] = acl_rule.action
 
+            output = handle_output(output=output)
+
             logger.debug('Saving output to output object')
             if configuration['json_output']:
                 json_object.append(output)
@@ -467,6 +491,8 @@ def main():
                 output['Stateful'] = acl_rule.stateful
                 output['Action'] = acl_rule.action
 
+            output = handle_output(output=output)
+
             logger.debug('Saving output to output object')
             if configuration['json_output']:
                 json_object.append(output)
@@ -530,23 +556,7 @@ def main():
                 output['DSCP'] = acl_rule.dscp
                 output['Action'] = acl_rule.action
 
-            # Output cleanup
-            if output['Ether Type'] in ether_types.keys():
-                output['Ether Type'] = ether_types[output['Ether Type']]
-
-            if output['Protocol'] in protocols.keys():
-                output['Protocol'] = protocols[output['Protocol']]
-
-            if output['Source type'] == 'ANY':
-                output['Source name'] = '*'
-
-            if output['Destination type'] == 'ANY':
-                output['Source name'] = '*'
-
-            # Cleanup None values
-            for key in output.keys():
-                if output[key] is None:
-                    output[key] = ''
+            output = handle_output(output=output)
 
             logger.debug('Saving output to output object')
             if configuration['json_output']:
