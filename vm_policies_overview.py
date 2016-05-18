@@ -25,6 +25,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-05-18 - 0.6.2 - Fixing typo and applying to all sections with a function
 2016-05-18 - 0.6.3 - Fixing second typo
 2016-05-18 - 0.6.4 - Fixing output handling
+2016-05-18 - 1.0.0 - First stable release
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
