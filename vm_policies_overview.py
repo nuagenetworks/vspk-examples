@@ -24,6 +24,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-05-18 - 0.6.1 - Missing coma fix
 2016-05-18 - 0.6.2 - Fixing typo and applying to all sections with a function
 2016-05-18 - 0.6.3 - Fixing second typo
+2016-05-18 - 0.6.4 - Fixing output handling
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -225,6 +226,10 @@ protocols = {
     '255': 'Reserved'
 }
 
+configuration = {}
+logger = None
+output_parser = None
+
 
 def get_args():
     """
@@ -248,6 +253,11 @@ def get_args():
 
 
 def handle_output(output):
+    """
+    Parsing output to correct values
+    """
+    global output_parser
+
     if output['Ether type'] in ether_types.keys():
         output['Ether type'] = ether_types[output['Ether type']]
 
@@ -260,18 +270,39 @@ def handle_output(output):
     if output['Destination type'] == 'ANY':
         output['Source name'] = '*'
 
-    # Cleanup None values
-    for key in output.keys():
-        if output[key] is None:
-            output[key] = ''
+    if not configuration['json_output']:
+        # Cleanup None values
+        for key in output.keys():
+            if output[key] is None:
+                output[key] = ''
 
-    return output
+    logger.debug('Saving output to output object')
+    if configuration['json_output']:
+        output_parser.append(output)
+    else:
+        output_parser.add_row([
+            output['VM Name'],
+            output['Interface MAC'],
+            output['ACL type'],
+            output['Ether type'],
+            output['Protocol'],
+            output['Source type'],
+            output['Source name'],
+            output['Destination type'],
+            output['Destination name'],
+            output['Source port'],
+            output['Destination port'],
+            output['DSCP'],
+            output['Stateful'],
+            output['Action']
+        ])
 
 
 def main():
     """
     Main function to gather the information on the VM applied policies
     """
+    global configuration, logger, output_parser
 
     # Handling arguments
     args = get_args()
@@ -369,10 +400,10 @@ def main():
     # Starting output
     if configuration['json_output']:
         logger.debug('JSON output enabled, not setting up an output table')
-        json_object = []
+        output_parser = []
     else:
         logger.debug('Setting up output table')
-        pt = PrettyTable(output_fields)
+        output_parser = PrettyTable(output_fields)
 
     # Gathering ACL rules and handling them
     for vm_interface in vm_interfaces:
@@ -426,28 +457,7 @@ def main():
                 output['Stateful'] = acl_rule.stateful
                 output['Action'] = acl_rule.action
 
-            output = handle_output(output=output)
-
-            logger.debug('Saving output to output object')
-            if configuration['json_output']:
-                json_object.append(output)
-            else:
-                pt.add_row([
-                    output['VM Name'],
-                    output['Interface MAC'],
-                    output['ACL type'],
-                    output['Ether type'],
-                    output['Protocol'],
-                    output['Source type'],
-                    output['Source name'],
-                    output['Destination type'],
-                    output['Destination name'],
-                    output['Source port'],
-                    output['Destination port'],
-                    output['DSCP'],
-                    output['Stateful'],
-                    output['Action']
-                ])
+            handle_output(output=output)
 
         logger.debug('Handling Egress ACL entries')
         for entry in egress_acl_entries:
@@ -492,28 +502,7 @@ def main():
                 output['Stateful'] = acl_rule.stateful
                 output['Action'] = acl_rule.action
 
-            output = handle_output(output=output)
-
-            logger.debug('Saving output to output object')
-            if configuration['json_output']:
-                json_object.append(output)
-            else:
-                pt.add_row([
-                    output['VM Name'],
-                    output['Interface MAC'],
-                    output['ACL type'],
-                    output['Ether type'],
-                    output['Protocol'],
-                    output['Source type'],
-                    output['Source name'],
-                    output['Destination type'],
-                    output['Destination name'],
-                    output['Source port'],
-                    output['Destination port'],
-                    output['DSCP'],
-                    output['Stateful'],
-                    output['Action']
-                ])
+            handle_output(output=output)
 
         logger.debug('Handling Redirect policies entries')
         for entry in forward_acl_entries:
@@ -557,34 +546,13 @@ def main():
                 output['DSCP'] = acl_rule.dscp
                 output['Action'] = acl_rule.action
 
-            output = handle_output(output=output)
-
-            logger.debug('Saving output to output object')
-            if configuration['json_output']:
-                json_object.append(output)
-            else:
-                pt.add_row([
-                    output['VM Name'],
-                    output['Interface MAC'],
-                    output['ACL type'],
-                    output['Ether type'],
-                    output['Protocol'],
-                    output['Source type'],
-                    output['Source name'],
-                    output['Destination type'],
-                    output['Destination name'],
-                    output['Source port'],
-                    output['Destination port'],
-                    output['DSCP'],
-                    output['Stateful'],
-                    output['Action']
-                ])
+            handle_output(output=output)
 
     logger.debug('Printing output')
     if configuration['json_output']:
-        print json.dumps(json_object, sort_keys=True, indent=4)
+        print json.dumps(output_parser, sort_keys=True, indent=4)
     else:
-        print pt.get_string()
+        print output_parser.get_string()
 
     return 0
 
