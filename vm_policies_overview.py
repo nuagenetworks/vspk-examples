@@ -10,6 +10,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-05-18 - 0.1 - First beta
 2016-05-18 - 0.2 - Fix unused variable
 2016-05-18 - 0.3 - Check location and network type and if a fixer exists
+2016-05-18 - 0.4 - Order of table fields fix
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -208,7 +209,22 @@ def main():
             if configuration['json_output']:
                 json_object.append(output)
             else:
-                pt.add_row(output.values())
+                pt.add_row([
+                    output['VM Name'],
+                    output['Interface MAC'],
+                    output['ACL type'],
+                    output['Ether type'],
+                    output['Protocol'],
+                    output['Source type'],
+                    output['Source name'],
+                    output['Destination type'],
+                    output['Destination name'],
+                    output['Source port'],
+                    output['Destination port'],
+                    output['DSCP'],
+                    output['Stateful'],
+                    output['Action']
+                ])
 
         logger.debug('Handling Egress ACL entries')
         for entry in egress_acl_entries:
@@ -257,7 +273,22 @@ def main():
             if configuration['json_output']:
                 json_object.append(output)
             else:
-                pt.add_row(output.values())
+                pt.add_row([
+                    output['VM Name'],
+                    output['Interface MAC'],
+                    output['ACL type'],
+                    output['Ether type'],
+                    output['Protocol'],
+                    output['Source type'],
+                    output['Source name'],
+                    output['Destination type'],
+                    output['Destination name'],
+                    output['Source port'],
+                    output['Destination port'],
+                    output['DSCP'],
+                    output['Stateful'],
+                    output['Action']
+                ])
 
         logger.debug('Handling Redirect policies entries')
         for entry in forward_acl_entries:
@@ -305,7 +336,22 @@ def main():
             if configuration['json_output']:
                 json_object.append(output)
             else:
-                pt.add_row(output.values())
+                pt.add_row([
+                    output['VM Name'],
+                    output['Interface MAC'],
+                    output['ACL type'],
+                    output['Ether type'],
+                    output['Protocol'],
+                    output['Source type'],
+                    output['Source name'],
+                    output['Destination type'],
+                    output['Destination name'],
+                    output['Source port'],
+                    output['Destination port'],
+                    output['DSCP'],
+                    output['Stateful'],
+                    output['Action']
+                ])
 
     logger.debug('Printing output')
     if configuration['json_output']:
