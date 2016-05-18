@@ -21,6 +21,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-05-18 - 0.5.1 - Fix for fetching fetcher
 2016-05-18 - 0.5.2 - Fix for fetching object instead of array
 2016-05-18 - 0.6.0 - Output cleanup
+2016-05-18 - 0.6.1 - Missing coma fix
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -211,7 +212,7 @@ protocols = {
     '132': 'SCTP',
     '133': 'FC',
     '134': 'RSVP-E2E-IGNORE',
-    '135': 'Mobility Header'
+    '135': 'Mobility Header',
     '136': 'UDPLite',
     '137': 'MPLS-in-IP',
     '138': 'manet',
