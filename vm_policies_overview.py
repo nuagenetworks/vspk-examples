@@ -8,6 +8,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2016-05-18 - 0.1 - First beta
+2016-05-18 - 0.2 - Fix unused variable
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -57,7 +58,6 @@ def main():
     configuration['log_file'] = None
     if args.logfile:
         configuration['log_file'] = args.logfile
-    configuration['nuage_domain'] = args.nuage_domain
     configuration['nuage_enterprise'] = args.nuage_enterprise
     configuration['nuage_host'] = args.nuage_host
     configuration['nuage_port'] = args.nuage_port
