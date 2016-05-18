@@ -9,6 +9,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 --- Version history ---
 2016-05-18 - 0.1 - First beta
 2016-05-18 - 0.2 - Fix unused variable
+2016-05-18 - 0.3 - Check location and network type and if a fixer exists
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -192,9 +193,11 @@ def main():
                 output['Ether type'] = acl_rule.ether_type
                 output['Protocol'] = acl_rule.protocol
                 output['Source type'] = acl_rule.location_type
-                output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
+                if acl_rule.location_type and nc.user.fetcher_for_rest_name(acl_rule.location_type):
+                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
                 output['Destination type'] = acl_rule.network_type
-                output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
+                if acl_rule.network_type and nc.user.fetcher_for_rest_name(acl_rule.network_type):
+                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
                 output['Source port'] = acl_rule.source_port
                 output['Destination port'] = acl_rule.destination_port
                 output['DSCP'] = acl_rule.dscp
@@ -239,9 +242,11 @@ def main():
                 output['Ether type'] = acl_rule.ether_type
                 output['Protocol'] = acl_rule.protocol
                 output['Source type'] = acl_rule.location_type
-                output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
+                if acl_rule.location_type and nc.user.fetcher_for_rest_name(acl_rule.location_type):
+                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
                 output['Destination type'] = acl_rule.network_type
-                output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
+                if acl_rule.network_type and nc.user.fetcher_for_rest_name(acl_rule.network_type):
+                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
                 output['Source port'] = acl_rule.source_port
                 output['Destination port'] = acl_rule.destination_port
                 output['DSCP'] = acl_rule.dscp
@@ -286,9 +291,11 @@ def main():
                 output['Ether type'] = acl_rule.ether_type
                 output['Protocol'] = acl_rule.protocol
                 output['Source type'] = acl_rule.location_type
-                output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
+                if acl_rule.location_type and nc.user.fetcher_for_rest_name(acl_rule.location_type):
+                    output['Source name'] = nc.user.fetcher_for_rest_name(acl_rule.location_type.lower()).get(filter='ID == "%s"' % acl_rule.location_id).name
                 output['Destination type'] = acl_rule.network_type
-                output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
+                if acl_rule.network_type and nc.user.fetcher_for_rest_name(acl_rule.network_type):
+                    output['Destination name'] = nc.user.fetcher_for_rest_name(acl_rule.network_type.lower()).get(filter='ID == "%s"' % acl_rule.network_id).name
                 output['Source port'] = acl_rule.source_port
                 output['Destination port'] = acl_rule.destination_port
                 output['DSCP'] = acl_rule.dscp
