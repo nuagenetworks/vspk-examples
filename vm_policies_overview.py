@@ -23,6 +23,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 2016-05-18 - 0.6.0 - Output cleanup
 2016-05-18 - 0.6.1 - Missing coma fix
 2016-05-18 - 0.6.2 - Fixing typo and applying to all sections with a function
+2016-05-18 - 0.6.3 - Fixing second typo
 
  --- Usage ---
 run 'vm_policies_overview.py -h' for an overview
@@ -248,7 +249,7 @@ def get_args():
 
 def handle_output(output):
     if output['Ether type'] in ether_types.keys():
-        output['Ether type'] = ether_types[output['Ether Type']]
+        output['Ether type'] = ether_types[output['Ether type']]
 
     if output['Protocol'] in protocols.keys():
         output['Protocol'] = protocols[output['Protocol']]
