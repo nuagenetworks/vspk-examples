@@ -27,7 +27,7 @@ Check the examples for several combinations of arguments.
 --- CSV Strucure ---
 A CSV file can be used to import individual settings for each host. The structure of this CSV looks like this (fields in <> are mandatory, fields with [] can be left blank)
  (for overview purpose, each field is on it's own line. In the file itself, this should all be one line)
-    "<IP>",
+    "<IP>/<FQDN>",
     "[name]",
     "[hypervisor user]",
     "[hypervisor password]",
@@ -129,6 +129,7 @@ def get_args():
     parser.add_argument('--all-hosts', required=False, help='Configure all Hosts from the selected Clusters', dest='all_hosts', action='store_true')
     parser.add_argument('--cluster', required=False, help='Cluster that has to be present in the Nuage vCenter Deployment Tool (can be specified multiple times)', dest='clusters', type=str, action='append')
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
+    parser.add_argument('-f', '--allow-fqdn', required=False, help='Allow the use of FQDN in the CSV hosts file instead of IP', dest='allow_fqdn', action='store_true')
     parser.add_argument('--datacenter', required=False, help='Datacenter that has to be present in the Nuage vCenter Deployment Tool (can be specified multiple times)', dest='datacenters', type=str, action='append')
     parser.add_argument('--host', required=False, help='Host IPs that has to be present in the Nuage vCenter Deployment Tool (can be specified multiple times)', dest='hosts', type=str, action='append')
     parser.add_argument('--host-configure-agent', required=False, help='Configure the VM Agent settings of the vCenter Hosts. It will configure the Management network you specify as an argument with --hv-management-network, or the one in the CSV file if specified. For datastore it will use the first available local datastore, or the one specified in the CSV file if provided.', dest='host_configure_agent', action='store_true')
@@ -158,7 +159,7 @@ def get_args():
     return args
 
 
-def handle_vdt_datacenter(logger, nc, vc, nuage_vcenter, vc_dc, nc_dc_list, vcenter_name, all_clusters, all_hosts, clusters, hosts, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent):
+def handle_vdt_datacenter(logger, nc, vc, nuage_vcenter, vc_dc, nc_dc_list, vcenter_name, all_clusters, all_hosts, clusters, hosts, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent, allow_fqdn):
     # Checking if the Datacenter exists in the Nuage vCenter Deployment Tool
     logger.debug('Checking vCenter Datacenter %s in Nuage vCenter Deployment Tool' % vc_dc.name)
     active_nc_dc = None
@@ -187,14 +188,12 @@ def handle_vdt_datacenter(logger, nc, vc, nuage_vcenter, vc_dc, nc_dc_list, vcen
     nc_cl_list = active_nc_dc.vcenter_clusters.get()
 
     for vc_cl in vc_cl_list:
-        if all_clusters:
-            handle_vdt_cluster(logger=logger, nc=nc, vc=vc, vc_dc=vc_dc, vc_cl=vc_cl, nuage_dc=active_nc_dc, nc_cl_list=nc_cl_list, all_hosts=all_hosts, hosts=hosts, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
-        elif vc_cl.name in clusters:
+        if all_clusters or vc_cl.name in clusters:
             logger.debug('vCenter Cluster %s is in list that has to be present in the Nuage vCenter Deployment Tool, checking if it already exists.' % vc_cl.name)
-            handle_vdt_cluster(logger=logger, nc=nc, vc=vc, vc_dc=vc_dc, vc_cl=vc_cl, nuage_dc=active_nc_dc, nc_cl_list=nc_cl_list, all_hosts=all_hosts, hosts=hosts, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
+            handle_vdt_cluster(logger=logger, nc=nc, vc=vc, vc_dc=vc_dc, vc_cl=vc_cl, nuage_dc=active_nc_dc, nc_cl_list=nc_cl_list, all_hosts=all_hosts, hosts=hosts, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent, allow_fqdn=allow_fqdn)
 
 
-def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_hosts, hosts, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent):
+def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_hosts, hosts, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent, allow_fqdn):
     # Checking if the Cluster exists in the Nuage vCenter Deployment Tool
     logger.debug('Checking vCenter Cluster %s in Nuage vCenter Deployment Tool' % vc_cl.name)
     active_nc_cl = None
@@ -226,44 +225,50 @@ def handle_vdt_cluster(logger, nc, vc, vc_dc, vc_cl, nuage_dc, nc_cl_list, all_h
             # Determining Host management IP
             vc_host_ip = None
 
-            # Determine management IP based on 'management' property
-            vnic_mgmtIP_list = []
-            for vc_host_NicManager in vc_host.config.virtualNicManagerInfo.netConfig:
-                if vc_host_NicManager.nicType == 'management':
-                    if(len(vc_host_NicManager.selectedVnic) > 0):
-                        for vnic in vc_host_NicManager.candidateVnic:
-                            if vnic.key in vc_host_NicManager.selectedVnic:
-                                if ip_address_is_valid(vnic.spec.ip.ipAddress):
-                                    vnic_mgmtIP_list.append(vnic.spec.ip.ipAddress)
-                    break
-
-            if len(vnic_mgmtIP_list) > 0:
-                for vnic_ip in vnic_mgmtIP_list:
-                    if ip_address_is_valid(vnic_ip):
-                        logger.debug('Found managenent IP %s for vCenter Host %s' % (vnic_ip, vc_host.name))
-                        vc_host_ip = vnic_ip
-                        break
+            if allow_fqdn:
+                vc_host_ip = vc_host.name
             else:
-                # Did not find any Management IP, use first IP
-                for vnic in vc_host.config.network.vnic:
-                    logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name, vc_cl.name))
-                    if ip_address_is_valid(vnic.spec.ip.ipAddress):
-                        logger.debug('Found management IP %s for vCenter Host %s' % (vnic.spec.ip.ipAddress, vc_host.name))
-                        vc_host_ip = vnic.spec.ip.ipAddress
+                # Determine management IP based on 'management' property
+                vnic_mgmtIP_list = []
+                for vc_host_NicManager in vc_host.config.virtualNicManagerInfo.netConfig:
+                    if vc_host_NicManager.nicType == 'management':
+                        if(len(vc_host_NicManager.selectedVnic) > 0):
+                            for vnic in vc_host_NicManager.candidateVnic:
+                                if vnic.key in vc_host_NicManager.selectedVnic:
+                                    if ip_address_is_valid(vnic.spec.ip.ipAddress):
+                                        vnic_mgmtIP_list.append(vnic.spec.ip.ipAddress)
                         break
 
-            handle_vdt_host(logger=logger, nc=nc, vc=vc, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vc_host_ip, nuage_cl=active_nc_cl, nc_host_list=nc_host_list, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
+                if len(vnic_mgmtIP_list) > 0:
+                    for vnic_ip in vnic_mgmtIP_list:
+                        if ip_address_is_valid(vnic_ip):
+                            logger.debug('Found managenent IP %s for vCenter Host %s' % (vnic_ip, vc_host.name))
+                            vc_host_ip = vnic_ip
+                            break
+                else:
+                    # Did not find any Management IP, use first IP
+                    for vnic in vc_host.config.network.vnic:
+                        logger.debug('Checking vnic for Host %s in vCenter Cluster %s' % (vc_host.name, vc_cl.name))
+                        if ip_address_is_valid(vnic.spec.ip.ipAddress):
+                            logger.debug('Found management IP %s for vCenter Host %s' % (vnic.spec.ip.ipAddress, vc_host.name))
+                            vc_host_ip = vnic.spec.ip.ipAddress
+                            break
+
+            handle_vdt_host(logger=logger, nc=nc, vc=vc, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vc_host_ip, nuage_cl=active_nc_cl, nc_host_list=nc_host_list, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent, allow_fqdn=allow_fqdn)
+        elif allow_fqdn and vc_host.name in hosts:
+            logger.debug('vCenter Host %s is in list that has to be present in the Nuage vCenter Deployment Tool, checking if it already exists.' % vc_host.name)
+            handle_vdt_host(logger=logger, nc=nc, vc=vc, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vc_host.name, nuage_cl=active_nc_cl, nc_host_list=nc_host_list, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent, allow_fqdn=allow_fqdn)
         else:
             # Get all IPs in a list for this host to check if the IP is present in the hosts to add
             for vnic in vc_host.config.network.vnic:
                 logger.debug('Found IP %s for vCenter Host %s' % (vnic.spec.ip.ipAddress, vc_host.name))
                 if vnic.spec.ip.ipAddress in hosts:
                     logger.debug('vCenter Host %s with IP %s is in list that has to be present in the Nuage vCenter Deployment Tool, checking if it already exists.' % (vc_host.name, vnic.spec.ip.ipAddress))
-                    handle_vdt_host(logger=logger, nc=nc, vc=vc, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vnic.spec.ip.ipAddress, nuage_cl=active_nc_cl, nc_host_list=nc_host_list, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
+                    handle_vdt_host(logger=logger, nc=nc, vc=vc, vc_cl=vc_cl, vc_host=vc_host, vc_host_ip=vnic.spec.ip.ipAddress, nuage_cl=active_nc_cl, nc_host_list=nc_host_list, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent, allow_fqdn=allow_fqdn)
                     break
 
 
-def handle_vdt_host(logger, nc, vc, vc_cl, vc_host, vc_host_ip, nuage_cl, nc_host_list, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent):
+def handle_vdt_host(logger, nc, vc, vc_cl, vc_host, vc_host_ip, nuage_cl, nc_host_list, hosts_list, hv_username, hv_password, hv_management_network, hv_data_network, hv_vm_network, hv_mc_network, host_configure_agent, allow_fqdn):
     logger.debug('Checking vCenter Host %s in the Nuage vCenter Deployment Tool' % vc_host.name)
     active_nc_host = None
     for nc_host in nc_host_list:
@@ -537,67 +542,68 @@ def main():
     """
 
     # Handling arguments
-    args                = get_args()
-    all_clusters        = args.all_clusters
-    all_datacenters     = args.all_datacenters
-    all_hosts           = args.all_hosts
-    clusters            = []
+    args = get_args()
+    all_clusters = args.all_clusters
+    all_datacenters = args.all_datacenters
+    all_hosts = args.all_hosts
+    clusters = []
     if args.clusters:
-        clusters        = args.clusters
-    debug               = args.debug
-    datacenters         = []
+        clusters = args.clusters
+    debug = args.debug
+    allow_fqdn = args.allow_fqdn
+    datacenters = []
     if args.datacenters:
-        datacenters     = args.datacenters
-    hosts               = []
+        datacenters = args.datacenters
+    hosts = []
     if args.hosts:
-        hosts           = args.hosts
-    host_configure_agent= args.host_configure_agent
-    hosts_file             = None
+        hosts = args.hosts
+    host_configure_agent = args.host_configure_agent
+    hosts_file = None
     if args.hosts_file:
-        hosts_file         = args.hosts_file
-    hv_username             = None
+        hosts_file = args.hosts_file
+    hv_username = None
     if args.hv_username:
-        hv_username         = args.hv_username
-    hv_password         = None
+        hv_username = args.hv_username
+    hv_password = None
     if args.hv_password:
-        hv_password     = args.hv_password
+        hv_password = args.hv_password
     hv_management_network = None
     if args.hv_management_network:
         hv_management_network = args.hv_management_network
-    hv_data_network     = None
+    hv_data_network = None
     if args.hv_data_network:
         hv_data_network = args.hv_data_network
-    hv_vm_network       = None
+    hv_vm_network = None
     if args.hv_vm_network:
-        hv_vm_network   = args.hv_vm_network
-    hv_mc_network       = None
+        hv_vm_network = args.hv_vm_network
+    hv_mc_network = None
     if args.hv_mc_network:
-        hv_mc_network   = args.hv_mc_network
-    log_file            = None
+        hv_mc_network = args.hv_mc_network
+    log_file = None
     if args.logfile:
-        log_file        = args.logfile
-    nuage_enterprise    = args.nuage_enterprise
-    nuage_host          = args.nuage_host
-    nuage_port          = args.nuage_port
-    nuage_password      = None
+        log_file = args.logfile
+    nuage_enterprise = args.nuage_enterprise
+    nuage_host = args.nuage_host
+    nuage_port = args.nuage_port
+    nuage_password = None
     if args.nuage_password:
-        nuage_password  = args.nuage_password
-    nuage_username      = args.nuage_username
-    nuage_vrs_ovf       = None
+        nuage_password = args.nuage_password
+    nuage_username = args.nuage_username
+    nuage_vrs_ovf = None
     if args.nuage_vrs_ovf:
-        nuage_vrs_ovf   = args.nuage_vrs_ovf
-    nosslcheck          = args.nosslcheck
-    verbose             = args.verbose
-    vcenter_host        = args.vcenter_host
-    vcenter_name        = vcenter_host
+        nuage_vrs_ovf = args.nuage_vrs_ovf
+    nosslcheck = args.nosslcheck
+    verbose = args.verbose
+    vcenter_host = args.vcenter_host
+    vcenter_name = vcenter_host
     if args.vcenter_name:
-        vcenter_name    = args.vcenter_name
-    vcenter_https_port  = args.vcenter_https_port
-    vcenter_http_port   = args.vcenter_http_port
-    vcenter_password    = None
+        vcenter_name = args.vcenter_name
+    vcenter_https_port = args.vcenter_https_port
+    vcenter_http_port = args.vcenter_http_port
+    vcenter_password = None
     if args.vcenter_password:
         vcenter_password = args.vcenter_password
-    vcenter_username    = args.vcenter_username
+    vcenter_username = args.vcenter_username
 
     # Logging settings
     if debug:
@@ -653,11 +659,11 @@ def main():
             for row in hosts_list_raw:
                 logger.debug('Found CSV row: %s' % ','.join(row))
                 # Adding IP to the hosts variable so it can also be used in further handling if it's a valid IP
-                if ip_address_is_valid(row[0]):
+                if allow_fqdn or ip_address_is_valid(row[0]):
                     hosts_list[row[0]] = row
                     hosts.append(row[0])
                 else:
-                    logger.warning('Found an invalid IP %s in the hosts file, skipping line' % row[0])
+                    logger.warning('Found an invalid IP %s in the hosts file and FQDNs are not allowed, skipping line' % row[0])
 
     # Disabling SSL verification if set
     ssl_context = None
@@ -750,11 +756,9 @@ def main():
 
         # Parsing all datacenters
         for vc_dc in vc_dc_list:
-            if all_datacenters:
-                handle_vdt_datacenter(logger=logger, nc=nc, vc=vc, nuage_vcenter=nuage_vcenter, vc_dc=vc_dc, nc_dc_list=nc_dc_list, vcenter_name=vcenter_name, all_clusters=all_clusters, all_hosts=all_hosts, clusters=clusters, hosts=hosts, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
-            elif vc_dc.name in datacenters:
-                    logger.debug('vCenter Datacenter %s is in list that has to be present in the Nuage vCenter Deployment Tool, checking if it already exists.' % vc_dc.name)
-                    handle_vdt_datacenter(logger=logger, nc=nc, vc=vc, nuage_vcenter=nuage_vcenter, vc_dc=vc_dc, nc_dc_list=nc_dc_list, vcenter_name=vcenter_name, all_clusters=all_clusters, all_hosts=all_hosts, clusters=clusters, hosts=hosts, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent)
+            if all_datacenters or vc_dc.name in datacenters:
+                logger.debug('vCenter Datacenter %s is in list that has to be present in the Nuage vCenter Deployment Tool, checking if it already exists.' % vc_dc.name)
+                handle_vdt_datacenter(logger=logger, nc=nc, vc=vc, nuage_vcenter=nuage_vcenter, vc_dc=vc_dc, nc_dc_list=nc_dc_list, vcenter_name=vcenter_name, all_clusters=all_clusters, all_hosts=all_hosts, clusters=clusters, hosts=hosts, hosts_list=hosts_list, hv_username=hv_username, hv_password=hv_password, hv_management_network=hv_management_network, hv_data_network=hv_data_network, hv_vm_network=hv_vm_network, hv_mc_network=hv_mc_network, host_configure_agent=host_configure_agent, allow_fqdn=allow_fqdn)
 
         logger.info('Completed all tasks.')
         return 0
