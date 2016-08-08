@@ -11,7 +11,9 @@ needs to be defined.
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
-2016-08-06 - 0.1
+2016-08-06 - 0.1 - Initial development version
+2016-08-08 - 0.2 - Bugfixes
+2016-08-08 - 1.0 - Initial release
 
 --- Usage ---
 run 'python vm_split_activation.py -h' for an overview
