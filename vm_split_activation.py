@@ -157,7 +157,7 @@ def main():
 
     # Creating VM
     logger.info('Creating VM %s with UUID %s' % (name, uuid))
-    vm = vsdk.VM(name=name, uuid=uuid, interfaces=vm_interfaces)
+    vm = vsdk.NUVM(name=name, uuid=uuid, interfaces=vm_interfaces)
     if external:
         vm.external_id = uuid
     try:
