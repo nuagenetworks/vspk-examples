@@ -74,7 +74,7 @@ def main():
         ips = args.ips
     macs = args.macs
     name = args.name
-    subnets = args.subnet
+    subnets = args.subnets
     uuid = args.uuid
 
     # Logging settings
