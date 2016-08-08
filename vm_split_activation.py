@@ -89,11 +89,11 @@ def main():
     logger = logging.getLogger(__name__)
 
     # Sanity checks
-    if macs.length > 0 and macs.lentgh != subnets.length:
+    if len(macs) > 0 and len(macs) != len(subnets):
         logger.critical('The amount of macs is not equal to the amount of subnets, which is an invalid configuration.')
         return 1
 
-    if ips.length > 0 and macs.length != ips.length:
+    if len(ips) > 0 and len(macs) != len(ips):
         logger.critical('Some IPs are specified, but not the same amount as macs and subnets, which is an invalid configuration.')
         return 1
 
@@ -151,7 +151,7 @@ def main():
         vm_interface = vsdk.NUVMInterface(name='%s-vm-interface-%s' % (name, index), vport_id=vport.id, mac=mac)
         if external:
             vm_interface.external_id = '%s-vm-interface-%s' % (name, index)
-        if ips.length > 0:
+        if len(ips) > 0:
             vm_interface.ip_address = ips[index]
         vm_interfaces.append(vm_interface)
 
