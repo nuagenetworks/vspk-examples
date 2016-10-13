@@ -50,6 +50,7 @@ A CSV file can be used to import individual settings for each host. The structur
     "[data DNS 2]",
     "[MTU]",
     "[require metadata (True|False)]",
+    "[generic split activation (True|False)]",
     "[multi VM support (True|False)]",
     "[DHCP relay server (IP)]",
     "[flow eviction threshold]",
@@ -373,88 +374,93 @@ def handle_vdt_host(logger, nc, vc, vc_cl, vc_host, vc_host_ip, nuage_cl, nc_hos
                 active_nc_host.v_require_nuage_metadata = True
             else:
                 active_nc_host.v_require_nuage_metadata = False
-            # 23 - "[multi VM support (True|False)]" - multi_vmssupport
+            # 23 - "[generic split activation (True|False)]" - generic_split_activation
             if row[23].lower() == 'true':
+                active_nc_host.generic_split_activation = True
+            else:
+                active_nc_host.generic_split_activation = False
+            # 24 - "[multi VM support (True|False)]" - multi_vmssupport
+            if row[24].lower() == 'true':
                 active_nc_host.multi_vmssupport = True
             else:
                 active_nc_host.multi_vmssupport = False
-            # 24 - "[DHCP relay server (IP)]" - dhcp_relay_server
-            if row[24] and ip_address_is_valid(row[24]):
+            # 25 - "[DHCP relay server (IP)]" - dhcp_relay_server
+            if row[25] and ip_address_is_valid(row[24]):
                 active_nc_host.dhcp_relay_server = row[24]
-            # 25 - "[flow eviction threshold]" - flow_eviction_threshold
-            if row[25]:
-                active_nc_host.flow_eviction_threshold = row[25]
-            # 26 - "[datapath sync timeout]" - datapath_sync_timeout
+            # 26 - "[flow eviction threshold]" - flow_eviction_threshold
             if row[26]:
-                active_nc_host.datapath_sync_timeout = row[26]
-            # 27 - "[network uplink interface]" - network_uplink_interface
+                active_nc_host.flow_eviction_threshold = row[25]
+            # 27 - "[datapath sync timeout]" - datapath_sync_timeout
             if row[27]:
+                active_nc_host.datapath_sync_timeout = row[26]
+            # 28 - "[network uplink interface]" - network_uplink_interface
+            if row[28]:
                 active_nc_host.network_uplink_interface = row[27]
-            # 28 - "[network uplink IP]" - network_uplink_interface_ip
-            if row[28] and ip_address_is_valid(row[28]):
+            # 29 - "[network uplink IP]" - network_uplink_interface_ip
+            if row[29] and ip_address_is_valid(row[28]):
                 active_nc_host.network_uplink_interface_ip = row[28]
-            # 29 - "[network uplink netmask (octet structure)]" - network_uplink_interface_netmask
-            if row[29]:
+            # 30 - "[network uplink netmask (octet structure)]" - network_uplink_interface_netmask
+            if row[30]:
                 active_nc_host.network_uplink_interface_netmask = row[29]
-            # 30 - "[network uplink gateway]" - network_uplink_interface_gateway
-            if row[30] and ip_address_is_valid(row[30]):
+            # 31 - "[network uplink gateway]" - network_uplink_interface_gateway
+            if row[31] and ip_address_is_valid(row[30]):
                 active_nc_host.network_uplink_interface_gateway = row[30]
-            # 31 - "[script URL]" - customized_script_url
-            if row[31]:
-                active_nc_host. customized_script_url = row[31]
-            # 32 - "[personality]" - personality
-            if row[32].lower() == 'vrs' or row[32].lower() == 'vrs-g':
+            # 32 - "[script URL]" - customized_script_url
+            if row[32]:
+                active_nc_host.customized_script_url = row[31]
+            # 33 - "[personality]" - personality
+            if row[33].lower() == 'vrs' or row[32].lower() == 'vrs-g':
                 active_nc_host.personality = row[32]
-            # 33 - "[site ID]" - site_id
-            if row[33]:
+            # 34 - "[site ID]" - site_id
+            if row[34]:
                 active_nc_host.site_id = row[33]
-            # 34 - "[NFS server address (IP)]" - nfs_log_server
-            if row[34] and ip_address_is_valid(row[34]):
+            # 35 - "[NFS server address (IP)]" - nfs_log_server
+            if row[35] and ip_address_is_valid(row[34]):
                 active_nc_host.nfs_log_server = row[34]
-            # 35 - "[NFS mount path]" - nfs_mount_path
-            if row[35]:
+            # 36 - "[NFS mount path]" - nfs_mount_path
+            if row[36]:
                 active_nc_host.nfs_mount_path = row[35]
-            # 36 - "[primary Nuage controller (IP)]" - primary_nuage_controller
-            if row[36] and ip_address_is_valid(row[36]):
+            # 37 - "[primary Nuage controller (IP)]" - primary_nuage_controller
+            if row[37] and ip_address_is_valid(row[36]):
                 active_nc_host.primary_nuage_controller = row[36]
-            # 37 - "[secondary Nuage controller (IP)]" - secondary_nuage_controller
-            if row[37] and ip_address_is_valid(row[37]):
+            # 38 - "[secondary Nuage controller (IP)]" - secondary_nuage_controller
+            if row[38] and ip_address_is_valid(row[37]):
                 active_nc_host.secondary_nuage_controller = row[37]
-            # 38 - "[primary NTP server (IP)]" - ntp_server1
-            if row[38] and ip_address_is_valid(row[38]):
+            # 39 - "[primary NTP server (IP)]" - ntp_server1
+            if row[39] and ip_address_is_valid(row[38]):
                 active_nc_host.ntp_server1 = row[38]
-            # 39 - "[secondary NTP server (IP)]" - ntp_server2
-            if row[39] and ip_address_is_valid(row[39]):
+            # 40 - "[secondary NTP server (IP)]" - ntp_server2
+            if row[40] and ip_address_is_valid(row[39]):
                 active_nc_host.ntp_server2 = row[39]
-            # 40 - "[static route target IP]" - static_route
-            if row[40] and ip_address_is_valid(row[40]):
-                active_nc_host.static_route = row[40]
             # 41 - "[static route target IP]" - static_route
-            if row[41]:
+            if row[41] and ip_address_is_valid(row[40]):
+                active_nc_host.static_route = row[40]
+            # 42 - "[static route target IP]" - static_route_netmask
+            if row[42]:
                 active_nc_host.static_route_netmask = row[41]
-            # 42 - "[static route next-hop gateway]" - static_route_gateway
-            if row[42] and ip_address_is_valid(row[42]):
+            # 43 - "[static route next-hop gateway]" - static_route_gateway
+            if row[43] and ip_address_is_valid(row[42]):
                 active_nc_host.static_route_gateway = row[42]
-            # 43 - "[multicast send interface]" - multicast_send_interface
-            if row[43]:
+            # 44 - "[multicast send interface]" - multicast_send_interface
+            if row[44]:
                 active_nc_host.multicast_send_interface = row[43]
-            # 44 - "[multicast send IP]" - multicast_send_interface_ip
-            if row[44] and ip_address_is_valid(row[44]):
+            # 45 - "[multicast send IP]" - multicast_send_interface_ip
+            if row[45] and ip_address_is_valid(row[44]):
                 active_nc_host.multicast_send_interface_ip = row[44]
-            # 45 - "[multicast send netmask (octet structure)]" - multicast_send_interface_netmask
-            if row[45]:
+            # 46 - "[multicast send netmask (octet structure)]" - multicast_send_interface_netmask
+            if row[46]:
                 active_nc_host.multicast_send_interface_netmask = row[45]
-            # 46 - "[multicast receive IP]" - multicast_receive_interface_ip
-            if row[46] and ip_address_is_valid(row[46]):
+            # 47 - "[multicast receive IP]" - multicast_receive_interface_ip
+            if row[47] and ip_address_is_valid(row[46]):
                 active_nc_host.multicast_receive_interface_ip = row[46]
-            # 47 - "[multicast receive netmask (octet structure)]" - multicast_receive_interface_netmask
-            if row[47]:
-                active_nc_host.multicast_receive_interface_netmask = row[47]
-            # 48 - "[Host Agent VM Port Group]"
+            # 48 - "[multicast receive netmask (octet structure)]" - multicast_receive_interface_netmask
             if row[48]:
-                agent_portgroup_name = row[48]
-            # 49 - "[Host Agent VM Datastore]"
+                active_nc_host.multicast_receive_interface_netmask = row[47]
+            # 49 - "[Host Agent VM Port Group]"
             if row[49]:
+                agent_portgroup_name = row[48]
+            # 50 - "[Host Agent VM Datastore]"
+            if row[50]:
                 agent_datastore_name = row[49]
         else:
             logger.warning('Host %s with IP %s from the vCenter Cluster %s is not in the hosts file, it will not be updated.' % (vc_host.name, vc_host_ip, vc_cl.name))

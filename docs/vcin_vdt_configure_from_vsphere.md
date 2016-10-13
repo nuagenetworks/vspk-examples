@@ -24,12 +24,13 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 ### Version history ###
 2016-01-19 - 1.2
+2016-10-13 - 1.3 - Adding generic split activation support
 
 ### CSV Strucure ###
 A CSV file can be used to import individual settings for each host. The structure of this CSV looks like this (fields in <> are mandatory, fields with [] can be left blank)
 (for overview purpose, each field is on it's own line. In the file itself, this should all be one line)
 
-    "<IP>",
+    "<IP>/<FQDN>",
     "[name]",
     "[hypervisor user]",
     "[hypervisor password]",
@@ -52,6 +53,7 @@ A CSV file can be used to import individual settings for each host. The structur
     "[data DNS 2]",
     "[MTU]",
     "[require metadata (True|False)]",
+    "[generic split activation (True|False)]",
     "[multi VM support (True|False)]",
     "[DHCP relay server (IP)]",
     "[flow eviction threshold]",
