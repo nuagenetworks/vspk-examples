@@ -140,12 +140,12 @@ def update_nuage_policy_group(logger, nc, nc_vm_properties, nc_vm_pgs, remove_po
     pg_change = False
     for nc_pg_name in nc_vm_pgs:
         # Getting the policy group which matches the required one
-        logger.debug('Looking for Policy Group {0:s} in domain {0:s} for VM {0:s}'.format(nc_pg_name, nc_vm_properties[
+        logger.debug('Looking for Policy Group {0:s} in domain {0:s} for VM {1:s}'.format(nc_pg_name, nc_vm_properties[
             'nuage.domain'], nc_vm_properties['name']))
         nc_vm_pg = nc_domain.policy_groups.get_first(filter="name == '{0:s}'".format(nc_pg_name))
         if nc_vm_pg is None:
             logger.error(
-                'Policy Group {0:s} can not be found in domain {0:s} for VM {0:s}, skipping it'.format(nc_pg_name,
+                'Policy Group {0:s} can not be found in domain {0:s} for VM {1:s}, skipping it'.format(nc_pg_name,
                                                                                                        nc_vm_properties[
                                                                                                            'nuage.domain'],
                                                                                                        nc_vm_properties[
@@ -154,13 +154,13 @@ def update_nuage_policy_group(logger, nc, nc_vm_properties, nc_vm_pgs, remove_po
 
         if not any(x.id == nc_vm_pg.id for x in nc_vport_pgs):
             # Adding Policy Group to vPort
-            logger.debug('Adding Policy Group {0:s} to VM {0:s}'.format(nc_pg_name, nc_vm_properties['name']))
+            logger.debug('Adding Policy Group {0:s} to VM {1:s}'.format(nc_pg_name, nc_vm_properties['name']))
             nc_vport_pgs.append(nc_vm_pg)
             pg_change = True
 
     if pg_change:
         nc_vm_properties['vport'].assign(nc_vport_pgs, vsdk.NUPolicyGroup)
-        logger.info('Saved {0:d} Policy Groups to VM {0:s}'.format(len(nc_vport_pgs), nc_vm_properties['name']))
+        logger.info('Saved {0:d} Policy Groups to VM {1:s}'.format(len(nc_vport_pgs), nc_vm_properties['name']))
     else:
         logger.info(
             'No changes found in the Policy Group settings for VM {0:s}, skipping'.format(nc_vm_properties['name']))
@@ -413,7 +413,7 @@ def main():
 
             if len(nc_vm_pgs) > 0:
                 logger.debug(
-                    'Handing task over to Nuage part to set {0:d} Policy Groups on VM {0:s}'.format(len(nc_vm_pgs),
+                    'Handing task over to Nuage part to set {0:d} Policy Groups on VM {1:s}'.format(len(nc_vm_pgs),
                                                                                                     nc_vm_properties[
                                                                                                         'name']))
                 update_nuage_policy_group(logger=logger, nc=nc, nc_vm_properties=nc_vm_properties, nc_vm_pgs=nc_vm_pgs,
