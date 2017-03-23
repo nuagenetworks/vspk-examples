@@ -1,0 +1,570 @@
+---
+###############################################################################
+# Sample Ansible role for the nuage_vspk Ansible module                       #
+# -----------------------------------------------------                       #
+# This role will create or update an Enterprise struture in Nuage             #
+#                                                                             #
+# It demonstrates the full capabilities of the nuage_vspk Ansible module in a #
+# useful example.                                                             #
+#                                                                             #
+# It will create the following structure:                                     #
+# Enterprise: <Name specified in your playbook/vars>                          #
+# |- User: <username specified in your playbook/vars>                         #
+# |  |- Assigned to Administrators group                                      #
+# |                                                                           #
+# |- DomainTemplate: App-DomainTemplate                                       #
+# |  |- Zone: DB-Zone                                                         #
+# |  |  |- Subnet: DB-Subnet                                                  #
+# |  |- Zone: FW-Zone                                                         #
+# |  |  |- Subnet: FW-Subnet                                                  #
+# |  |- Zone: Web-Zone                                                        #
+# |  |  |- Subnet: Web-Subnet                                                 #
+# |  |                                                                        #
+# |  |- Redirection target: FW                                                #
+# |  |                                                                        #
+# |  |- Ingress policy: TOP-Ingress-Policy                                    #
+# |  |  |- Rule: Allow ICMP                                                   #
+# |  |- Ingress policy: BOTTOM-Ingress-Policy                                 #
+# |  |  |- Rule: Blocks all traffic                                           #
+# |  |                                                                        #
+# |  |- Egress policy: Allow All                                              #
+# |  |                                                                        #
+# |  |- Forward policy: Redirect-Policy                                       #
+# |  |  |- Redirect rule: Redirect DB traffic to FW                           #
+# |                                                                           #
+# |- Domain: Finance-App                                                      #
+# |- Domain: HR-App                                                           #
+#                                                                             #
+# All descriptions are set to 'Created by Ansible' by this playbook, to       #
+# indicate the use of Ansible (you can change them below, of course)          #
+#                                                                             #
+# This role is idempotent on itself                                           #
+###############################################################################
+- hosts: localhost
+
+#
+# Configure to match your environment
+#
+  vars:
+    nuage_auth:
+      api_username: admin
+      api_password: P8gpEVDbl5wO8Fan
+      api_enterprise: csp
+      api_url: https://58d40d67dc12180001d1300a.labs.nuagex.io:8443
+    enterprise_name: Ansible-Test
+    enterprise_new_name: Ansible-Updated-Test
+    enterprise_admin_username: ansible-admin
+    enterprise_admin_password: ansible
+    enterprise_admin_new_password: ansible_new
+    enterprise_admin_first_name: Ansible
+    enterprise_admin_last_name: Admin
+    enterprise_admin_email: ansible@localhost.local
+
+  tasks:
+  # Creating a new Enterprise, this should create a new Enterprise
+  # Unless an Enterprise with the name already exists
+  - name: Create Enterprise
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Enterprise
+      state: present
+      properties:
+        name: "{{ enterprise_name }}"
+        description: "Created by Ansible"
+  
+  # Lets search for the Enterprise by name, because we forgot
+  # to save the result of the previous task
+  # A find will fail if it does not find anything
+  # If an id is specified, it just fetches that entity
+  # If no id and no properties are given, find one will return
+  # the first entity in the parent.
+  # If multiple properties are given, it will do an AND search
+  - name: Finding Enterprise
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Enterprise
+      command: find
+      properties:
+        name: "{{ enterprise_name }}"
+    register: nuage_enterprise
+  
+  - name: Create admin user
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: User
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      state: present
+      match_filter: "userName == '{{ enterprise_admin_username }}'"
+      properties:
+        email: "{{ enterprise_admin_email }}"
+        first_name: "{{ enterprise_admin_first_name }}"
+        last_name: "{{ enterprise_admin_last_name }}"
+        password: "{{ enterprise_admin_password }}"
+        user_name: "{{ enterprise_admin_username }}"
+    register: nuage_user
+  
+  # Updating password for User
+  # Best to ignore errors in this case, because Nuage API does not allow
+  # a password update in case the existing password is provided
+  - name: Update admin password
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: User
+      id: "{{ nuage_user.id }}"
+      command: change_password
+      properties:
+        password: "{{ enterprise_admin_new_password }}"
+    ignore_errors: yes
+  
+  - name: Find Administrators group in Enterprise
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Group
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      command: find
+      properties:
+        name: "Administrators"
+    register: nuage_group
+  
+  # Assign is done by using the same state (present)
+  # The module will determine itself if it has to add a member (assign)
+  # Or if it has to create or update an entity
+  - name: Assign admin user to administrators
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: User
+      id: "{{ nuage_user.id }}"
+      parent_id: "{{ nuage_group.id }}"
+      parent_type: Group
+      state: present
+  
+  - name: Create DomainTemplate
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: DomainTemplate
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      state: present
+      properties:
+        name: "App-DomainTemplate"
+        description: "Created by Ansible"
+    register: nuage_dom_temp
+  
+  - name: Create the Web Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: ZoneTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      properties:
+        name: "Web-Zone"
+        description: "Created by Ansible"
+    register: nuage_web_zone
+  
+  - name: Create the DB Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: ZoneTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      properties:
+        name: "DB-Zone"
+        description: "Created by Ansible"
+    register: nuage_db_zone
+  
+  - name: Create the FW Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: ZoneTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      properties:
+        name: "FW-Zone"
+        description: "Created by Ansible"
+    register: nuage_fw_zone
+  
+  - name: Create the Web Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: SubnetTemplate
+      parent_id: "{{ nuage_web_zone.id }}"
+      parent_type: ZoneTemplate
+      state: present
+      properties:
+        name: "Web-Subnet"
+        description: "Created by Ansible"
+        address: "10.10.10.0"
+        netmask: "255.255.255.0"
+        gateway: "10.10.10.1"
+    register: nuage_web_subnet
+  
+  - name: Create the DB Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: SubnetTemplate
+      parent_id: "{{ nuage_db_zone.id }}"
+      parent_type: ZoneTemplate
+      state: present
+      properties:
+        name: "DB-Subnet"
+        description: "Created by Ansible"
+        address: "10.10.20.0"
+        netmask: "255.255.255.0"
+        gateway: "10.10.20.1"
+    register: nuage_db_subnet
+  
+  - name: Create the FW Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: SubnetTemplate
+      parent_id: "{{ nuage_fw_zone.id }}"
+      parent_type: ZoneTemplate
+      state: present
+      properties:
+        name: "FW-Subnet"
+        description: "Created by Ansible"
+        address: "10.99.99.0"
+        netmask: "255.255.255.0"
+        gateway: "10.99.99.1"
+    register: nuage_fw_subnet
+  
+  - name: Create FW redirection target
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: RedirectionTargetTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      match_filter: "name == 'FW'"
+      properties:
+        name: "FW"
+        description: "Created by Ansible"
+        end_point_type: "L3"
+    register: nuage_redirect_target
+  
+  - name: Put the domain template in policy edit mode
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Job
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      properties:
+        command: "BEGIN_POLICY_CHANGES"
+    register: nuage_job
+  
+  - name: Wait for job to finish
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Job
+      id: "{{ nuage_job.id }}"
+      command: wait_for_job
+  
+  - name: Create top allow all egress policy
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: EgressACLTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      match_filter: "name == 'Allow All' and policyState == 'DRAFT'"
+      properties:
+        name: "Allow All"
+        active: true
+        default_allow_ip: true
+        default_allow_non_ip: true
+        default_install_acl_implicit_rules: true
+        description: "Created by Ansible"
+        priority_type: "TOP"
+    register: nuage_top_egress_policy
+  
+  - name: Create top ingress policy
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: IngressACLTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      match_filter: "name == 'TOP-Ingress-Policy' and policyState == 'DRAFT'"
+      properties:
+        name: "TOP-Ingress-Policy"
+        active: true
+        description: "Created by Ansible"
+        priority_type: "TOP"
+    register: nuage_top_ingress_policy
+  
+  - name: Create bottom ingress policy
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: IngressACLTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      match_filter: "name == 'BOTTOM-Ingress-Policy' and policyState == 'DRAFT'"
+      properties:
+        name: "BOTTOM-Ingress-Policy"
+        active: true
+        description: "Created by Ansible"
+        priority_type: "BOTTOM"
+    register: nuage_bottom_ingress_policy
+  
+  - name: Create forward policy
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: IngressAdvFwdTemplate
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      match_filter: "name == 'Redirect-Policy' and policyState == 'DRAFT'"
+      properties:
+        name: "Redirect-Policy"
+        active: true
+        description: "Created by Ansible"
+        priority_type: "TOP"
+    register: nuage_redirect_policy
+  
+  - name: Create an allow all ICMP top rule
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: IngressACLEntryTemplate
+      parent_id: "{{ nuage_top_ingress_policy.id }}"
+      parent_type: IngressACLTemplate
+      state: present
+      match_filter: "description == 'Allow all ICMP'"
+      properties:
+        action: "FORWARD"
+        description: "Allow all ICMP"
+        ether_type: "0x0800"
+        location_type: "ANY"
+        network_type: "ANY"
+        priority: 0
+        protocol: "1"
+  
+  - name: Create a block all bottom rule
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: IngressACLEntryTemplate
+      parent_id: "{{ nuage_bottom_ingress_policy.id }}"
+      parent_type: IngressACLTemplate
+      state: present
+      match_filter: "description == 'Blocks all traffic'"
+      properties:
+        action: "DROP"
+        description: "Blocks all traffic"
+        ether_type: "0x0800"
+        location_type: "ANY"
+        network_type: "ANY"
+        priority: 999999
+        protocol: "ANY"
+  
+  - name: Create a forward rulee
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: IngressAdvFwdEntryTemplate
+      parent_id: "{{ nuage_redirect_policy.id }}"
+      parent_type: IngressAdvFwdTemplate
+      state: present
+      match_filter: "description == 'Redirect DB traffic to FW'"
+      properties:
+        action: "REDIRECT"
+        description: "Redirect DB traffic to FW"
+        destination_port: "3306"
+        ether_type: "0x0800"
+        location_type: "SUBNET"
+        location_id: "{{ nuage_web_subnet.id }}"
+        network_type: "SUBNET"
+        network_id: "{{ nuage_db_subnet.id }}"
+        protocol: "6"
+        redirect_vport_tag_id: "{{ nuage_redirect_target.id }}"
+        source_port: "*"
+  
+  - name: Commit policy changes
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Job
+      parent_id: "{{ nuage_dom_temp.id }}"
+      parent_type: DomainTemplate
+      state: present
+      properties:
+        command: "APPLY_POLICY_CHANGES"
+    register: nuage_job
+  
+  - name: Wait for job to finish
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Job
+      id: "{{ nuage_job.id }}"
+      command: wait_for_job
+  
+  # Creating a new Domain (if it doesn't exist yet)
+  - name: Creating a few Domains from the DomainTemplate
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Domain
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      state: present
+      match_filter: "name == '{{ item }}'"
+      properties:
+        name: "{{ item }}"
+        description: "Created by Ansible"
+        template_id: "{{ nuage_dom_temp.id }}"
+    with_items: 
+      - "Finance-App"
+      - "HR-App"
+  
+  - name: Finding Finance-App domain
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Domain
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      command: find
+      properties:
+        name: "Finance-App"
+    register: nuage_domain
+  
+  - name: Create the Audit Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Zone
+      parent_id: "{{ nuage_domain.id }}"
+      parent_type: Domain
+      state: present
+      properties:
+        name: "Audit-Zone"
+        description: "Created by Ansible"
+    register: nuage_audit_zone
+  
+  - name: Create the Audit Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Subnet
+      parent_id: "{{ nuage_audit_zone.id }}"
+      parent_type: Zone
+      state: present
+      properties:
+        name: "Audit-Subnet"
+        description: "Created by Ansible"
+        address: "10.88.88.0"
+        netmask: "255.255.255.0"
+        gateway: "10.88.88.1"
+    register: nuage_audit_subnet
+  
+  ###############################################################################
+  # PAUSING HERE FOR VERIFICATION
+  ###############################################################################
+  
+  - name: Pausing execution for verification
+    pause:
+      prompt: " ###################################################################################\n
+                # Please browse to your Architect to verify the above entities have been created. #\n
+                # Press enter to continue and automatically clean up, or CTRL-c (and A) to abort. #\n
+                ###################################################################################"
+  
+  ###############################################################################
+  # CLEANUP
+  ###############################################################################
+  
+  # A find all will return all the matching entities in a list.
+  # Important: Even if there is only one matching entity, 
+  # it will still return a list, with one element
+  # If no id and no properties are given, find all will return
+  # all entities in the parent.
+  - name: Fetching all Domains
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Domain
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      command: find
+    register: nuage_domains
+  
+  # State absent will delete an entity if it exists. Easiest way is to do it 
+  # by id as in this example. In this case no parent information is needed
+  - name: Deleting all found Domains
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Domain
+      state: absent
+      id: "{{ item.ID }}"
+    with_items: "{{ nuage_domains.entities }}"
+    when: nuage_domains.entities is defined
+  
+  # You can also delete an entity using properties. In this case parent
+  # information is mandatory as it has to search a parent for the matching
+  # entity to delete
+  - name: Delete the DomainTemplate
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: DomainTemplate
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      state: absent
+      properties:
+        name: App-DomainTemplate
+  
+  # As with assign, an unassign can be done using the absent state on the proper
+  # parent. The module will check if it has to unassign the entity, or delete it
+  - name: Unassign admin user to administrators
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: User
+      id: "{{ nuage_user.id }}"
+      parent_id: "{{ nuage_group.id }}"
+      parent_type: Group
+      state: absent
+  
+  - name: Delete admin user
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: User
+      id: "{{ nuage_user.id }}"
+      state: absent
+  
+  - name: Delete Enterprise
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Enterprise
+      id: "{{ nuage_enterprise.id }}"
+      state: absent
