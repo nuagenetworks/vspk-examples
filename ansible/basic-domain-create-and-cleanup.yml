@@ -6,10 +6,10 @@
 #
   vars:
     nuage_auth:
-      api_username: admin
-      api_password: P8gpEVDbl5wO8Fan
+      api_username: csproot
+      api_password: csproot
       api_enterprise: csp
-      api_url: https://58d40d67dc12180001d1300a.labs.nuagex.io:8443
+      api_url: https://localhost:8443
     enterprise_name: Ansible-Test
     enterprise_new_name: Ansible-Updated-Test
     enterprise_admin_username: ansible-admin
