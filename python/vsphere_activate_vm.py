@@ -61,7 +61,6 @@ import ConfigParser
 import ipaddress
 import logging
 import os
-import re
 import requests
 import sys
 
@@ -73,19 +72,33 @@ from vspk import v4_0 as vsdk
 
 def get_args():
     parser = argparse.ArgumentParser(description="Tool to activate a VM in a Nuage environment.")
-    parser.add_argument('-c', '--config-file', required=False, help='Configuration file to use, if not specified ~/.nuage/config.ini is used', dest='config_file', type=str)
-    parser.add_argument('-m', '--mode', required=False, help='Mode of activation: metadata or split-activation. Default is metadata', dest='mode', choices=['metadata','split-activation'], default='metadata', type=str)
-    parser.add_argument('-n', '--vm-name', required=False, help='The VM in vCenter that should be connected to Nuage', dest='vcenter_vm_name', type=str)
-    parser.add_argument('-e', '--vm-enterprise', required=False, help='The Nuage enterprise to which the VM should be connected', dest='nuage_vm_enterprise', type=str)
-    parser.add_argument('-d', '--vm-domain', required=False, help='The Nuage domain to which the VM should be connected', dest='nuage_vm_domain', type=str)
-    parser.add_argument('-z', '--vm-zone', required=False, help='The Nuage zone to which the VM should be connected', dest='nuage_vm_zone', type=str)
-    parser.add_argument('-s', '--vm-subnet', required=False, help='The Nuage subnet to which the VM should be connected', dest='nuage_vm_subnet', type=str)
+    parser.add_argument('-c', '--config-file', required=False,
+                        help='Configuration file to use, if not specified ~/.nuage/config.ini is used',
+                        dest='config_file', type=str)
+    parser.add_argument('-m', '--mode', required=False,
+                        help='Mode of activation: metadata or split-activation. Default is metadata', dest='mode',
+                        choices=['metadata', 'split-activation'], default='metadata', type=str)
+    parser.add_argument('-n', '--vm-name', required=False, help='The VM in vCenter that should be connected to Nuage',
+                        dest='vcenter_vm_name', type=str)
+    parser.add_argument('-e', '--vm-enterprise', required=False,
+                        help='The Nuage enterprise to which the VM should be connected', dest='nuage_vm_enterprise',
+                        type=str)
+    parser.add_argument('-d', '--vm-domain', required=False,
+                        help='The Nuage domain to which the VM should be connected', dest='nuage_vm_domain', type=str)
+    parser.add_argument('-z', '--vm-zone', required=False, help='The Nuage zone to which the VM should be connected',
+                        dest='nuage_vm_zone', type=str)
+    parser.add_argument('-s', '--vm-subnet', required=False,
+                        help='The Nuage subnet to which the VM should be connected', dest='nuage_vm_subnet', type=str)
     parser.add_argument('-i', '--vm-ip', required=False, help='The IP the VM should have', dest='nuage_vm_ip', type=str)
-    parser.add_argument('-p', '--vm-policy-group', required=False, help='The policy group the VM should have', dest='nuage_vm_policy_group', type=str)
-    parser.add_argument('-r', '--vm-redirection-target', required=False, help='The redirection target the VM should have', dest='nuage_vm_redirection_target', type=str)
-    parser.add_argument('-u', '--vm-user', required=False, help='The Nuage User owning the VM', dest='nuage_vm_user', type=str)
+    parser.add_argument('-p', '--vm-policy-group', required=False, help='The policy group the VM should have',
+                        dest='nuage_vm_policy_group', type=str)
+    parser.add_argument('-r', '--vm-redirection-target', required=False,
+                        help='The redirection target the VM should have', dest='nuage_vm_redirection_target', type=str)
+    parser.add_argument('-u', '--vm-user', required=False, help='The Nuage User owning the VM', dest='nuage_vm_user',
+                        type=str)
     args = parser.parse_args()
     return args
+
 
 def parse_config(config_file):
     """
@@ -127,9 +140,11 @@ def parse_config(config_file):
 
     return cfg
 
+
 def clear():
     logging.debug('Clearing terminal')
     os.system(['clear', 'cls'][os.name == 'nt'])
+
 
 def find_vm(vc, name):
     """
@@ -146,6 +161,7 @@ def find_vm(vc, name):
             logging.debug('Found virtual machine %s' % vm.name)
             return vm
     return None
+
 
 def main():
     """
@@ -217,25 +233,38 @@ def main():
 
         # Connecting to Nuage
         try:
-            logging.info('Connecting to Nuage server {0:s} with username {1:s} and enterprise {2:s}'.format(cfg.get('NUAGE', 'vsd_api_url'), cfg.get('NUAGE', 'vsd_api_user'), cfg.get('NUAGE', 'vsd_api_enterprise')))
-            nc = vsdk.NUVSDSession(username=cfg.get('NUAGE', 'vsd_api_user'), password=cfg.get('NUAGE', 'vsd_api_password'), enterprise=cfg.get('NUAGE', 'vsd_api_enterprise'), api_url=cfg.get('NUAGE', 'vsd_api_url'))
+            logging.info('Connecting to Nuage server {0:s} with username {1:s} and enterprise {2:s}'.format(
+                cfg.get('NUAGE', 'vsd_api_url'), cfg.get('NUAGE', 'vsd_api_user'),
+                cfg.get('NUAGE', 'vsd_api_enterprise')))
+            nc = vsdk.NUVSDSession(username=cfg.get('NUAGE', 'vsd_api_user'),
+                                   password=cfg.get('NUAGE', 'vsd_api_password'),
+                                   enterprise=cfg.get('NUAGE', 'vsd_api_enterprise'),
+                                   api_url=cfg.get('NUAGE', 'vsd_api_url'))
             nc.start()
-        except IOError, e:
+        except IOError:
             pass
 
         if not nc or not nc.is_current_session():
-            logging.error('Could not connect to Nuage host {0:s} with user {1:s}, enterprise {2:s} and specified password'.format(cfg.get('NUAGE', 'vsd_api_url'), cfg.get('NUAGE', 'vsd_api_user'), cfg.get('NUAGE', 'vsd_api_enterprise')))
+            logging.error(
+                'Could not connect to Nuage host {0:s} with user {1:s}, enterprise {2:s} and specified password'.format(
+                    cfg.get('NUAGE', 'vsd_api_url'), cfg.get('NUAGE', 'vsd_api_user'),
+                    cfg.get('NUAGE', 'vsd_api_enterprise')))
             return 1
 
         # Connecting to vCenter
         try:
-            logging.info('Connecting to vCenter server {0:s} with username {1:s}'.format(cfg.get('VSPHERE', 'vsphere_api_host'), cfg.get('VSPHERE', 'vsphere_api_user')))
-            vc = SmartConnect(host=cfg.get('VSPHERE', 'vsphere_api_host'), user=cfg.get('VSPHERE', 'vsphere_api_user'), pwd=cfg.get('VSPHERE', 'vsphere_api_password'), port=int(cfg.get('VSPHERE', 'vsphere_api_port')))
-        except IOError, e:
+            logging.info(
+                'Connecting to vCenter server {0:s} with username {1:s}'.format(cfg.get('VSPHERE', 'vsphere_api_host'),
+                                                                                cfg.get('VSPHERE', 'vsphere_api_user')))
+            vc = SmartConnect(host=cfg.get('VSPHERE', 'vsphere_api_host'), user=cfg.get('VSPHERE', 'vsphere_api_user'),
+                              pwd=cfg.get('VSPHERE', 'vsphere_api_password'),
+                              port=int(cfg.get('VSPHERE', 'vsphere_api_port')))
+        except IOError:
             pass
 
         if not vc:
-            logging.error('Could not connect to vCenter host {0:s} with user {1:s} and specified password'.format(cfg.get('VSPHERE', 'vsphere_api_host'), cfg.get('VSPHERE', 'vsphere_api_user')))
+            logging.error('Could not connect to vCenter host {0:s} with user {1:s} and specified password'.format(
+                cfg.get('VSPHERE', 'vsphere_api_host'), cfg.get('VSPHERE', 'vsphere_api_user')))
             return 1
 
         logging.info('Connected to both Nuage & vCenter servers')
@@ -451,7 +480,8 @@ def main():
             print('If you want a static IP, please enter it. Or press enter for a DHCP assigned IP.')
             while vm_ip is None:
                 choice = raw_input('Please enter the IP or press enter for a DHCP assigned IP: ')
-                if not choice or ipaddress.ip_address(choice) in ipaddress.ip_network('%s/%s' % (vm_subnet.address, vm_subnet.netmask)):
+                if not choice or ipaddress.ip_address(choice) in ipaddress.ip_network(
+                                '%s/%s' % (vm_subnet.address, vm_subnet.netmask)):
                     vm_ip = choice
                     break
                 print('Invalid choice, please try again')
@@ -499,7 +529,8 @@ def main():
         # Verifying the Nuage redirection target existence or selecting it
         if nuage_vm_redirection_target:
             logging.debug('Finding Nuage redirection target %s' % nuage_vm_redirection_target)
-            vm_redirection_target = vm_domain.redirection_targets.get_first(filter="name == '%s'" % nuage_vm_redirection_target)
+            vm_redirection_target = vm_domain.redirection_targets.get_first(
+                filter="name == '%s'" % nuage_vm_redirection_target)
             if vm_redirection_target is None:
                 logging.error('Unable to find Nuage redirection target {0:s}'.format(nuage_vm_redirection_target))
                 return 1
@@ -582,29 +613,29 @@ def main():
                 vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.ip', value=vm_ip))
             # Policy group
             if vm_policy_group:
-                vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.policy-group', value=vm_policy_group.name))
+                vm_option_values.append(
+                    vim.option.OptionValue(key='nuage.nic0.policy-group', value=vm_policy_group.name))
             # Redirection target
             if vm_redirection_target:
-                vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.redirection-target', value=vm_redirection_target.name))
+                vm_option_values.append(
+                    vim.option.OptionValue(key='nuage.nic0.redirection-target', value=vm_redirection_target.name))
 
             logging.debug('Creating of config spec for VM')
             config_spec = vim.vm.ConfigSpec(extraConfig=vm_option_values)
             logging.info('Applying advanced parameters. This might take a couple of seconds')
             config_task = vcenter_vm.ReconfigVM_Task(spec=config_spec)
             logging.debug('Waiting for the advanced paramerter to be applied')
-            run_loop = True
-            while run_loop:
+            while True:
                 info = config_task.info
                 if info.state == vim.TaskInfo.State.success:
                     logging.debug('Advanced parameters applied')
-                    run_loop = False
                     break
                 elif info.state == vim.TaskInfo.State.error:
                     if info.error.fault:
-                        logging.info('Applying advanced parameters has quit with error: %s' % info.error.fault.faultMessage)
+                        logging.info(
+                            'Applying advanced parameters has quit with error: %s' % info.error.fault.faultMessage)
                     else:
                         logging.info('Applying advanced parameters has quit with cancelation')
-                    run_loop = False
                     break
                 sleep(5)
 
@@ -646,7 +677,7 @@ def main():
                 'MAC': vcenter_vm_mac
             }])
             nc.user.create_child(nc_vm)
-            
+
         else:
             logging.critical('Invalid mode')
             return 1
@@ -659,6 +690,7 @@ def main():
         return 1
 
     print('Activation of VM finished')
+
 
 # Start program
 if __name__ == "__main__":
