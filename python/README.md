@@ -1,3 +1,3 @@
-# VSPK-Go examples
+# VSPK-Python examples
 
-This folder contains examples using the [VSPK-Go](https://github.com/nuagenetworks/vspk-python)
+This folder contains examples using the [VSPK-Python](https://github.com/nuagenetworks/vspk-python)
