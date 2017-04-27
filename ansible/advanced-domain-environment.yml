@@ -51,6 +51,7 @@
       api_password: csproot
       api_enterprise: csp
       api_url: https://localhost:8443
+      api_version: v4_0
     enterprise_name: Ansible-Test
     enterprise_new_name: Ansible-Updated-Test
     enterprise_admin_username: ansible-admin
