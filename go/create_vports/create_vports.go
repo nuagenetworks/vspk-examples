@@ -96,5 +96,5 @@ func main() {
 
 	fmt.Printf("Executed requests: %d\n", requests)
 	elapsed := time.Since(start)
-	fmt.Printf("Elapsed time: %.2f\n", elapsed)
+	fmt.Printf("Elapsed time: %.2f seconds\n", elapsed.Seconds())
 }
