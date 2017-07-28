@@ -8,13 +8,13 @@ import (
 	"github.com/nuagenetworks/vspk-go/vspk"
 )
 
-var vsdUrl string = "https://localhost:8443"
-var vsdUser string = "csproot"
-var vsdPass string = "csproot"
-var vsdEnterprise string = "csp"
+var vsdURL = "https://localhost:8443"
+var vsdUser = "csproot"
+var vsdPass = "csproot"
+var vsdEnterprise = "csp"
 
 func main() {
-	mysession, root := vspk.NewSession(vsdUser, vsdPass, vsdEnterprise, vsdUrl)
+	mysession, root := vspk.NewSession(vsdUser, vsdPass, vsdEnterprise, vsdURL)
 	if err := mysession.Start(); err != nil {
 		fmt.Println("Unable to connect to Nuage VSD: " + err.Description)
 		os.Exit(1)
