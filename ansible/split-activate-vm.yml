@@ -1,0 +1,53 @@
+---
+###############################################################################
+# Example of split activation of a VM in Nuage VSP                            #
+#                                                                             #
+# This example is a demonstration on how to do split activation, it shows the #
+# activation for a VM with two network interfaces, one on a Layer 3 subnet    #
+# and one on a Layer 2 domain.                                                #
+#                                                                             #
+# A set of variables have to be configured at the beginning of the playbook.  #
+# These variables can either be gathered using different Ansible tasks or by  #
+# looking in the Nuage VSD Architect, or in the relevant hypervisor tools.    #
+###############################################################################
+- hosts: localhost
+
+#
+# Configure to match your environment
+#
+  vars:
+    nuage_auth:
+      api_username: csproot
+      api_password: csproot
+      api_enterprise: csp
+      api_url: https://localhost:8443
+      api_version: v4_0
+    subnet_id: ""
+    l2domain_id: ""
+    vm_name: "Test-VM"
+    vm_uuid: "42029f80-ed87-9e2c-01d2-fc48498792a5"
+    interface_1_mac: "00:50:56:82:7c:0a"
+    interface_2_mac: "00:50:56:82:d2:cd"
+    interface_1_ip: "10.10.10.100"
+
+  tasks:
+  - name: Split activate VM
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: VM
+      state: present
+      match_filter: "name == '{{ vm_name }}'"
+      properties:
+        name: "{{ vm_name }}"
+        uuid: "{{ vm_uuid }}"
+        interfaces:
+        - name: "{{ vm_name }}-interface01"
+          MAC: "{{ interface_1_mac }}"
+          IPAddress: "{{ interface_1_mac }}"
+          attachedNetworkID: "{{ subnet_id }}"
+          attachedNetworkType: "SUBNET"
+        - name: "{{ vm_name }}-interface02"
+          MAC: "{{ interface_2_mac }}"
+          attachedNetworkID: "{{ l2domain_id }}"
+          attachedNetworkType: "L2DOMAIN"

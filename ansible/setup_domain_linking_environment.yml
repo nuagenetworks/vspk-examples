@@ -1,0 +1,324 @@
+---
+###############################################################################
+# Example for setting up domain linking                                       #
+#                                                                             #
+# This playbook will create an enterprise and two domains with each 2 zones   #
+# and 3 subnets. It will configure domain linking between these two domains   #
+# of the type service chaining, using a specific IP on both domains as the    #
+# next-hop.                                                                   #
+###############################################################################
+- hosts: localhost
+
+#
+# Configure to match your environment
+#
+  vars:
+    nuage_auth:
+      api_username: csproot
+      api_password: csproot
+      api_enterprise: csp
+      api_url: https://localhost:8443
+      api_version: v5_0
+    enterprise_name: "Domain linking test"
+
+  pre_tasks:
+  - name: Check if Ansible version is correct
+    assert:
+      that: "ansible_version.full | version_compare('2.3', '>=')"
+
+  tasks:
+  - name: Create Enterprise
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Enterprise
+      state: present
+      properties:
+        name: "{{ enterprise_name }}"
+        description: "Created by Ansible"
+    register: nuage_enterprise
+
+  - name: Create Domain Template
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: DomainTemplate
+      parent_type: Enterprise
+      parent_id: "{{ nuage_enterprise.id }}"
+      state: present
+      properties:
+        name: "Base-Template"
+        description: "Created by Ansible"
+    register: nuage_domain_template
+
+  - name: Create top allow all egress policy
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: EgressACLTemplate
+      parent_id: "{{ nuage_domain_template.id }}"
+      parent_type: DomainTemplate
+      state: present
+      match_filter: "name == 'Allow All'"
+      properties:
+        name: "Allow All"
+        active: true
+        default_allow_ip: true
+        default_allow_non_ip: true
+        default_install_acl_implicit_rules: true
+        description: "Created by Ansible"
+        priority_type: "TOP"
+    register: nuage_top_egress_policy
+
+  - name: Create top ingress policy
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: IngressACLTemplate
+      parent_id: "{{ nuage_domain_template.id }}"
+      parent_type: DomainTemplate
+      state: present
+      match_filter: "name == 'Allow All'"
+      properties:
+        name: "Allow All"
+        active: true
+        allow_address_spoof: true
+        default_allow_ip: true
+        default_allow_non_ip: true
+        description: "Created by Ansible"
+        priority_type: "TOP"
+    register: nuage_top_ingress_policy
+
+  - name: Creating the APP01 Domain from the template
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Domain
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      state: present
+      match_filter: "name == 'APP01'"
+      properties:
+        name: "APP01"
+        description: "Created by Ansible"
+        template_id: "{{ nuage_domain_template.id }}"
+    register: nuage_domain_app01
+
+  - name: Create the App Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Zone
+      parent_id: "{{ nuage_domain_app01.id }}"
+      parent_type: Domain
+      state: present
+      properties:
+        name: "App-Zone"
+        description: "Created by Ansible"
+    register: nuage_app01_app_zone
+
+  - name: Create the Front Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Subnet
+      parent_id: "{{ nuage_app01_app_zone.id }}"
+      parent_type: Zone
+      state: present
+      properties:
+        name: "FRONT"
+        description: "Created by Ansible"
+        address: "172.10.10.0"
+        netmask: "255.255.255.0"
+        gateway: "172.10.10.1"
+    register: nuage_app01_front_subnet
+
+  - name: Create the Logic Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Subnet
+      parent_id: "{{ nuage_app01_app_zone.id }}"
+      parent_type: Zone
+      state: present
+      properties:
+        name: "LOGIC"
+        description: "Created by Ansible"
+        address: "172.10.20.0"
+        netmask: "255.255.255.0"
+        gateway: "172.10.20.1"
+    register: nuage_app01_logic_subnet
+
+  - name: Create the FW Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Zone
+      parent_id: "{{ nuage_domain_app01.id }}"
+      parent_type: Domain
+      state: present
+      properties:
+        name: "FW-Zone"
+        description: "Created by Ansible"
+    register: nuage_app01_fw_zone
+
+  - name: Create the FW Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Subnet
+      parent_id: "{{ nuage_app01_fw_zone.id }}"
+      parent_type: Zone
+      state: present
+      properties:
+        name: "FW"
+        description: "Created by Ansible"
+        address: "172.10.99.0"
+        netmask: "255.255.255.0"
+        gateway: "172.10.99.1"
+    register: nuage_app01_fw_subnet
+
+  - name: Creating the APP02 Domain from the template
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Domain
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      state: present
+      match_filter: "name == 'APP02'"
+      properties:
+        name: "APP02"
+        description: "Created by Ansible"
+        template_id: "{{ nuage_domain_template.id }}"
+    register: nuage_domain_app02
+
+  - name: Create the App Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Zone
+      parent_id: "{{ nuage_domain_app02.id }}"
+      parent_type: Domain
+      state: present
+      properties:
+        name: "App-Zone"
+        description: "Created by Ansible"
+    register: nuage_app02_app_zone
+
+  - name: Create the Front Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Subnet
+      parent_id: "{{ nuage_app02_app_zone.id }}"
+      parent_type: Zone
+      state: present
+      properties:
+        name: "FRONT"
+        description: "Created by Ansible"
+        address: "172.20.10.0"
+        netmask: "255.255.255.0"
+        gateway: "172.20.10.1"
+    register: nuage_app02_front_subnet
+
+  - name: Create the Logic Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Subnet
+      parent_id: "{{ nuage_app02_app_zone.id }}"
+      parent_type: Zone
+      state: present
+      properties:
+        name: "LOGIC"
+        description: "Created by Ansible"
+        address: "172.20.20.0"
+        netmask: "255.255.255.0"
+        gateway: "172.20.20.1"
+    register: nuage_app02_logic_subnet
+
+  - name: Create the FW Zone
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Zone
+      parent_id: "{{ nuage_domain_app02.id }}"
+      parent_type: Domain
+      state: present
+      properties:
+        name: "FW-Zone"
+        description: "Created by Ansible"
+    register: nuage_app02_fw_zone
+
+  - name: Create the FW Subnet
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Subnet
+      parent_id: "{{ nuage_app02_fw_zone.id }}"
+      parent_type: Zone
+      state: present
+      properties:
+        name: "FW"
+        description: "Created by Ansible"
+        address: "172.20.99.0"
+        netmask: "255.255.255.0"
+        gateway: "172.20.99.1"
+    register: nuage_app02_fw_subnet
+
+  - name: Create Domain link on APP01 from APP02
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Link
+      parent_type: Domain
+      parent_id: "{{ nuage_domain_app01.id }}"
+      state: present
+      match_filter: "associatedSourceID == '{{ nuage_domain_app02.id }}'"
+      properties:
+        type: "SERVICE_CHAINING"
+        associated_source_type: "DOMAIN"
+        associated_source_id: "{{ nuage_domain_app02.id }}"
+        associated_destination_type: "DOMAIN"
+        associated_destination_id: "{{ nuage_domain_app01.id }}"
+    register: nuage_link_app01_app02
+
+  - name: Configure link next-hop on APP01
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: NextHop
+      parent_type: Link
+      parent_id: "{{ nuage_link_app01_app02.id }}"
+      state: present
+      properties:
+        ip: "172.10.99.254"
+
+  - name: Create Domain link on APP02 from APP01
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Link
+      parent_type: Domain
+      parent_id: "{{ nuage_domain_app02.id }}"
+      state: present
+      match_filter: "associatedSourceID == '{{ nuage_domain_app01.id }}'"
+      properties:
+        type: "SERVICE_CHAINING"
+        associated_source_type: "DOMAIN"
+        associated_source_id: "{{ nuage_domain_app01.id }}"
+        associated_destination_type: "DOMAIN"
+        associated_destination_id: "{{ nuage_domain_app02.id }}"
+    register: nuage_link_app02_app01
+
+  - name: Configure link next-hop on APP02
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: NextHop
+      parent_type: Link
+      parent_id: "{{ nuage_link_app02_app01.id }}"
+      state: present
+      properties:
+        ip: "172.20.99.254"
