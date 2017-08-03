@@ -18,10 +18,10 @@
   vars:
     nuage_auth:
       api_username: csproot
-      api_password: csproot
+      api_password: "csproot"
       api_enterprise: csp
       api_url: https://localhost:8443
-      api_version: v4_0
+      api_version: v5_0
     subnet_id: ""
     l2domain_id: ""
     vm_name: "Test-VM"
@@ -44,10 +44,19 @@
         interfaces:
         - name: "{{ vm_name }}-interface01"
           MAC: "{{ interface_1_mac }}"
-          IPAddress: "{{ interface_1_mac }}"
+          IPAddress: "{{ interface_1_ip }}"
           attachedNetworkID: "{{ subnet_id }}"
           attachedNetworkType: "SUBNET"
         - name: "{{ vm_name }}-interface02"
           MAC: "{{ interface_2_mac }}"
           attachedNetworkID: "{{ l2domain_id }}"
           attachedNetworkType: "L2DOMAIN"
+    register: vm
+
+  - name: Remove VM
+    connection: local
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: VM
+      id: "{{ vm.id }}"
+      state: absent
