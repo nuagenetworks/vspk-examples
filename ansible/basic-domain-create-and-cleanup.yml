@@ -10,7 +10,7 @@
       api_password: csproot
       api_enterprise: csp
       api_url: https://localhost:8443
-      api_version: v4_0
+      api_version: v5_0
     enterprise_name: Ansible-Test
     enterprise_new_name: Ansible-Updated-Test
     enterprise_admin_username: ansible-admin
@@ -23,7 +23,7 @@
   tasks:
   # Creating a new enterprise
   - name: Create Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise
@@ -34,7 +34,7 @@
   
   # Checking if an Enterprise with the new name already exists
   - name: Check if an Enterprise exists with the new name
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise
@@ -46,7 +46,7 @@
   
   # Updating an enterprise's name
   - name: Update Enterprise name
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise
@@ -58,7 +58,7 @@
   
   # Creating a User in an Enterprise
   - name: Create admin user
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -78,7 +78,7 @@
   # Best to ignore errors in this case, because Nuage API does not allow
   # a password update in case the existing password is provided
   - name: Update admin password
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -90,7 +90,7 @@
   
   # Finding a group in an enterprise
   - name: Find Administrators group in Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Group
@@ -103,7 +103,7 @@
   
   # Assign the user to the group
   - name: Assign admin user to administrators
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -114,7 +114,7 @@
   
   # Creating multiple DomainTemplates
   - name: Create multiple DomainTemplates
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: DomainTemplate
@@ -130,7 +130,7 @@
   
   # Finding all DomainTemplates
   - name: Fetching all DomainTemplates
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: DomainTemplate
@@ -141,7 +141,7 @@
   
   # Deleting all DomainTemplates
   - name: Deleting all found DomainTemplates
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: DomainTemplate
@@ -152,7 +152,7 @@
   
   # Unassign user from group
   - name: Unassign admin user to administrators
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -163,7 +163,7 @@
   
   # Deleting an enterprise
   - name: Delete Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise

@@ -51,7 +51,7 @@
       api_password: csproot
       api_enterprise: csp
       api_url: https://localhost:8443
-      api_version: v4_0
+      api_version: v5_0
     enterprise_name: Ansible-Test
     enterprise_new_name: Ansible-Updated-Test
     enterprise_admin_username: ansible-admin
@@ -65,7 +65,7 @@
   # Creating a new Enterprise, this should create a new Enterprise
   # Unless an Enterprise with the name already exists
   - name: Create Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise
@@ -82,7 +82,7 @@
   # the first entity in the parent.
   # If multiple properties are given, it will do an AND search
   - name: Finding Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise
@@ -92,7 +92,7 @@
     register: nuage_enterprise
   
   - name: Create admin user
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -112,7 +112,7 @@
   # Best to ignore errors in this case, because Nuage API does not allow
   # a password update in case the existing password is provided
   - name: Update admin password
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -123,7 +123,7 @@
     ignore_errors: yes
   
   - name: Find Administrators group in Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Group
@@ -138,7 +138,7 @@
   # The module will determine itself if it has to add a member (assign)
   # Or if it has to create or update an entity
   - name: Assign admin user to administrators
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -148,7 +148,7 @@
       state: present
   
   - name: Create DomainTemplate
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: DomainTemplate
@@ -161,7 +161,7 @@
     register: nuage_dom_temp
   
   - name: Create the Web Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: ZoneTemplate
@@ -174,7 +174,7 @@
     register: nuage_web_zone
   
   - name: Create the DB Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: ZoneTemplate
@@ -187,7 +187,7 @@
     register: nuage_db_zone
   
   - name: Create the FW Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: ZoneTemplate
@@ -200,7 +200,7 @@
     register: nuage_fw_zone
   
   - name: Create the Web Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: SubnetTemplate
@@ -216,7 +216,7 @@
     register: nuage_web_subnet
   
   - name: Create the DB Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: SubnetTemplate
@@ -232,7 +232,7 @@
     register: nuage_db_subnet
   
   - name: Create the FW Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: SubnetTemplate
@@ -248,7 +248,7 @@
     register: nuage_fw_subnet
   
   - name: Create FW redirection target
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: RedirectionTargetTemplate
@@ -263,7 +263,7 @@
     register: nuage_redirect_target
   
   - name: Put the domain template in policy edit mode
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Job
@@ -275,7 +275,7 @@
     register: nuage_job
   
   - name: Wait for job to finish
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Job
@@ -283,7 +283,7 @@
       command: wait_for_job
   
   - name: Create top allow all egress policy
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: EgressACLTemplate
@@ -302,7 +302,7 @@
     register: nuage_top_egress_policy
   
   - name: Create top ingress policy
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: IngressACLTemplate
@@ -318,7 +318,7 @@
     register: nuage_top_ingress_policy
   
   - name: Create bottom ingress policy
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: IngressACLTemplate
@@ -334,7 +334,7 @@
     register: nuage_bottom_ingress_policy
   
   - name: Create forward policy
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: IngressAdvFwdTemplate
@@ -350,7 +350,7 @@
     register: nuage_redirect_policy
   
   - name: Create an allow all ICMP top rule
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: IngressACLEntryTemplate
@@ -368,7 +368,7 @@
         protocol: "1"
   
   - name: Create a block all bottom rule
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: IngressACLEntryTemplate
@@ -386,7 +386,7 @@
         protocol: "ANY"
   
   - name: Create a forward rulee
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: IngressAdvFwdEntryTemplate
@@ -408,7 +408,7 @@
         source_port: "*"
   
   - name: Commit policy changes
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Job
@@ -420,7 +420,7 @@
     register: nuage_job
   
   - name: Wait for job to finish
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Job
@@ -429,7 +429,7 @@
   
   # Creating a new Domain (if it doesn't exist yet)
   - name: Creating a few Domains from the DomainTemplate
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Domain
@@ -446,7 +446,7 @@
       - "HR-App"
   
   - name: Finding Finance-App domain
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Domain
@@ -458,7 +458,7 @@
     register: nuage_domain
   
   - name: Create the Audit Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Zone
@@ -471,7 +471,7 @@
     register: nuage_audit_zone
   
   - name: Create the Audit Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Subnet
@@ -507,7 +507,7 @@
   # If no id and no properties are given, find all will return
   # all entities in the parent.
   - name: Fetching all Domains
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Domain
@@ -519,7 +519,7 @@
   # State absent will delete an entity if it exists. Easiest way is to do it 
   # by id as in this example. In this case no parent information is needed
   - name: Deleting all found Domains
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Domain
@@ -532,7 +532,7 @@
   # information is mandatory as it has to search a parent for the matching
   # entity to delete
   - name: Delete the DomainTemplate
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: DomainTemplate
@@ -545,7 +545,7 @@
   # As with assign, an unassign can be done using the absent state on the proper
   # parent. The module will check if it has to unassign the entity, or delete it
   - name: Unassign admin user to administrators
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -555,7 +555,7 @@
       state: absent
   
   - name: Delete admin user
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: User
@@ -563,7 +563,7 @@
       state: absent
   
   - name: Delete Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise

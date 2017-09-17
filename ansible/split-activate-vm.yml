@@ -32,7 +32,7 @@
 
   tasks:
   - name: Split activate VM
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: VM
@@ -54,7 +54,7 @@
     register: vm
 
   - name: Remove VM
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: VM

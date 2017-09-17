@@ -28,7 +28,7 @@
 
   tasks:
   - name: Create Enterprise
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Enterprise
@@ -39,7 +39,7 @@
     register: nuage_enterprise
 
   - name: Create Domain Template
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: DomainTemplate
@@ -52,7 +52,7 @@
     register: nuage_domain_template
 
   - name: Create top allow all egress policy
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: EgressACLTemplate
@@ -71,7 +71,7 @@
     register: nuage_top_egress_policy
 
   - name: Create top ingress policy
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: IngressACLTemplate
@@ -90,7 +90,7 @@
     register: nuage_top_ingress_policy
 
   - name: Creating the APP01 Domain from the template
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Domain
@@ -105,7 +105,7 @@
     register: nuage_domain_app01
 
   - name: Create the App Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Zone
@@ -118,7 +118,7 @@
     register: nuage_app01_app_zone
 
   - name: Create the Front Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Subnet
@@ -134,7 +134,7 @@
     register: nuage_app01_front_subnet
 
   - name: Create the Logic Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Subnet
@@ -150,7 +150,7 @@
     register: nuage_app01_logic_subnet
 
   - name: Create the FW Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Zone
@@ -163,7 +163,7 @@
     register: nuage_app01_fw_zone
 
   - name: Create the FW Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Subnet
@@ -179,7 +179,7 @@
     register: nuage_app01_fw_subnet
 
   - name: Creating the APP02 Domain from the template
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Domain
@@ -194,7 +194,7 @@
     register: nuage_domain_app02
 
   - name: Create the App Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Zone
@@ -207,7 +207,7 @@
     register: nuage_app02_app_zone
 
   - name: Create the Front Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Subnet
@@ -223,7 +223,7 @@
     register: nuage_app02_front_subnet
 
   - name: Create the Logic Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Subnet
@@ -239,7 +239,7 @@
     register: nuage_app02_logic_subnet
 
   - name: Create the FW Zone
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Zone
@@ -252,7 +252,7 @@
     register: nuage_app02_fw_zone
 
   - name: Create the FW Subnet
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Subnet
@@ -268,7 +268,7 @@
     register: nuage_app02_fw_subnet
 
   - name: Create Domain link on APP01 from APP02
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Link
@@ -285,7 +285,7 @@
     register: nuage_link_app01_app02
 
   - name: Configure link next-hop on APP01
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: NextHop
@@ -296,7 +296,7 @@
         ip: "172.10.99.254"
 
   - name: Create Domain link on APP02 from APP01
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: Link
@@ -313,7 +313,7 @@
     register: nuage_link_app02_app01
 
   - name: Configure link next-hop on APP02
-    connection: local
+    delegate_to: localhost
     nuage_vspk:
       auth: "{{ nuage_auth }}"
       type: NextHop
