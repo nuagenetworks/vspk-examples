@@ -1,11 +1,15 @@
 ---
+# This is to populate all VRS found under the VSD vcenter section.
+# This playbook will populate all VRS identically.
+#
+
 - hosts: localhost
   vars:
     nuage_auth:
       api_username: csproot
       api_password: csproot
       api_enterprise: csp
-      api_url: https://vsd.cloud:8443
+      api_url: https://localhost:8443
       api_version: v5_0
 
   tasks:
