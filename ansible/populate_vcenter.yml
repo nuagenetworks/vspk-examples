@@ -1,0 +1,84 @@
+---
+- hosts: localhost
+  vars:
+    nuage_auth:
+      api_username: csproot
+      api_password: csproot
+      api_enterprise: csp
+      api_url: https://vns_dev_511.lab.llama2.cloud
+      api_version: v5_0
+
+    data:
+      135.121.118.28:
+        data_ip: 1.1.1.1
+      135.121.118.27:
+        data_ip: 1.1.1.2
+
+  tasks:
+    - name: Find all VCenters
+      connection: local
+      nuage_vspk:
+        auth: "{{ nuage_auth }}"
+        type: VCenter
+        command: find
+      register: vcenters
+    
+    - name: Find all vcenterdatacenters 
+      connection: local
+      nuage_vspk:
+        auth: "{{ nuage_auth }}"
+        type: VCenterDataCenter
+        parent_type: VCenter
+        parent_id: "{{ item.ID }}"
+        command: find
+      with_items:
+        - "{{ vcenters.entities }}"
+      register: datacenters
+       
+    - name: Find all clusters
+      connection: local
+      nuage_vspk:
+        auth: "{{ nuage_auth }}"
+        type: VCenterCluster
+        parent_type: VCenterDataCenter
+        parent_id: "{{ item.1.ID }}"
+        command: find
+      with_subelements:
+        - "{{ datacenters.results }}"
+        - entities
+      register: clusters
+        
+    - name: Find all Hypervisor
+      connection: local
+      nuage_vspk:
+        auth: "{{ nuage_auth }}"
+        type: VCenterHypervisor
+        parent_type: VCenterCluster
+        parent_id: "{{ item.1.ID }}"
+        command: find
+      with_subelements:
+        - "{{ clusters.results }}"
+        - entities
+      register: hypervisors
+
+    - name: Update Hypervisor
+      connection: local
+      nuage_vspk:
+        auth: "{{ nuage_auth }}"
+        state: present
+        type: VCenterHypervisor
+        id: "{{ item.1.ID }}"
+        properties:
+          data_gateway: "192.168.1.1"
+          data_network_portgroup: "1"
+          mgmt_network_portgroup: "2"
+          vm_network_portgroup: "3"
+          multicast_source_portgroup: "4"
+          hypervisor_user: "root"
+          hypervisor_password: "Alcateldc!"
+          name: "{{ item.1.name }}-test"
+          description: "test"
+      with_subelements:
+        - "{{ hypervisors.results }}"
+        - entities
+
