@@ -5,14 +5,8 @@
       api_username: csproot
       api_password: csproot
       api_enterprise: csp
-      api_url: https://vns_dev_511.lab.llama2.cloud
+      api_url: https://vsd.cloud:8443
       api_version: v5_0
-
-    data:
-      135.121.118.28:
-        data_ip: 1.1.1.1
-      135.121.118.27:
-        data_ip: 1.1.1.2
 
   tasks:
     - name: Find all VCenters
@@ -75,7 +69,7 @@
           vm_network_portgroup: "3"
           multicast_source_portgroup: "4"
           hypervisor_user: "root"
-          hypervisor_password: "Alcateldc!"
+          hypervisor_password: "SomePassword!"
           name: "{{ item.1.name }}-test"
           description: "test"
       with_subelements:
