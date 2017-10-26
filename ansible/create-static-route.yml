@@ -1,0 +1,58 @@
+# Script to provision an IPv6 static route in a domain of choice
+
+---
+- hosts: localhost
+  vars:
+    vsd_auth:
+       api_username: csproot
+       api_password: csproot
+       api_enterprise: csp
+       api_url: https://10.167.42.51:8443
+       api_version: v5_0
+    enterprise_name: Acme
+    domain_name: ipv6
+
+  tasks:
+  - name: Install Nuage Python VSPK
+    pip: name=vspk
+
+  - name: Finding Enterprise
+    connection: local
+    nuage_vspk:
+      auth: "{{ vsd_auth }}"
+      type: Enterprise
+      command: find
+      properties:
+        name: "{{ enterprise_name }}"
+    register: nuage_enterprise
+
+
+  - name: Finding domain in Enterprise
+    connection: local
+    nuage_vspk:
+      auth: "{{ vsd_auth }}"
+      type: Domain
+      command: find
+      parent_id: "{{ nuage_enterprise.id }}"
+      parent_type: Enterprise
+      properties:
+        name: "{{ domain_name }}"
+    register: nuage_domain
+
+
+  - name: Create IPv6 Static route
+    connection: local
+    nuage_vspk:
+      auth: "{{ vsd_auth }}"
+      type: StaticRoute
+      state: present
+      parent_id: "{{ nuage_domain.id }}"
+      parent_type: "Domain"
+      properties:
+        ip_type: IPV6
+        next_hop_ip: "2a02:1800:80:4000:0:0:0:1"
+        type: "OVERLAY"
+        ipv6_address: "0:0:0:0:0:0:0:0/0"
+    register: nuage_staticroute
+
+
