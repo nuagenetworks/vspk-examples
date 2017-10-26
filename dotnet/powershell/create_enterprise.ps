@@ -1,0 +1,28 @@
+[Reflection.Assembly]::LoadFile("C:\vspk\Newtonsoft.Json.dll")
+[Reflection.Assembly]::LoadFile("C:\vspk\csharp-bambou.dll")
+[Reflection.Assembly]::LoadFile("C:\vspk\vspk.dll")
+$s = new-object net.nuagenetworks.vspk.v5_0.VSDSession -argumentlist "csproot", "csproot", "csp", "https://135.121.117.224"
+
+$e = new-object net.nuagenetworks.vspk.v5_0.Enterprise
+$e.NUName = "test-456"
+$s.getMe().createChild($s,$e);
+
+$dt = new-object net.nuagenetworks.vspk.v5_0.DomainTemplate
+$dt.NUName = "domaintemplate1"
+$e.createChild($s,$dt)
+
+$d = new-object net.nuagenetworks.vspk.v5_0.Domain
+$d.NUName = "domain1"
+$d.NUTemplateID = $dt.NUId
+$e.createChild($s,$d)
+
+$z = new-object net.nuagenetworks.vspk.v5_0.Zone
+$z.NUName = "zone1"
+$d.createChild($s,$z)
+
+$sub = new-object net.nuagenetworks.vspk.v5_0.Subnet
+$sub.NUName = "subnet1";
+$sub.NUNetmask = "255.255.255.0"
+$sub.NUGateway = "192.168.1.1"
+$sub.NUAddress = "192.168.1.0"
+$z.createChild($s,$sub)
