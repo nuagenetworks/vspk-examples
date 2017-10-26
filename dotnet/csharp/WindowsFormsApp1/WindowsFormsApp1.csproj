@@ -32,6 +32,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="csharp-bambou">
+      <HintPath>..\..\..\..\..\..\..\..\vspk\csharp-bambou.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\..\..\..\..\vspk\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,6 +49,9 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="vspk">
+      <HintPath>..\..\..\..\..\..\..\..\vspk\vspk.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EnterpriseView.cs">
@@ -86,16 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\github\csharp-bambou\csharp-bambou\csharp-bambou.csproj">
-      <Project>{4a9cf828-fcab-41e6-a42b-8dd87c37c69f}</Project>
-      <Name>csharp-bambou</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\vspk\vspkgenerator\codegen\csharp\vspk\vspk\vspk.csproj">
-      <Project>{a12da736-a2ca-47e2-9a20-991330b39f45}</Project>
-      <Name>vspk</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
