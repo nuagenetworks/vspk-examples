@@ -1,6 +1,6 @@
 [Reflection.Assembly]::LoadFile("C:\vspk\Newtonsoft.Json.dll")
-[Reflection.Assembly]::LoadFile("C:\vspk\csharp-bambou.dll")
-[Reflection.Assembly]::LoadFile("C:\vspk\vspk.dll")
+[Reflection.Assembly]::LoadFile("C:\vspk\net.nuagenetworks.bambou.dll")
+[Reflection.Assembly]::LoadFile("C:\vspk\net.nuagenetworks.vspk.dll")
 $s = new-object net.nuagenetworks.vspk.v5_0.VSDSession -argumentlist "csproot", "csproot", "csp", "https://135.121.117.224"
 
 $e = new-object net.nuagenetworks.vspk.v5_0.Enterprise

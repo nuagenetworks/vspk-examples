@@ -32,8 +32,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="csharp-bambou">
-      <HintPath>..\..\..\..\..\..\..\..\vspk\csharp-bambou.dll</HintPath>
+    <Reference Include="net.nuagenetworks.bambou">
+      <HintPath>..\..\..\..\..\..\..\..\vspk\net.nuagenetworks.bambou.dll</HintPath>
+    </Reference>
+    <Reference Include="net.nuagenetworks.vspk">
+      <HintPath>..\..\..\..\..\..\..\..\vspk\net.nuagenetworks.vspk.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\..\..\..\..\..\..\vspk\Newtonsoft.Json.dll</HintPath>
@@ -49,9 +52,6 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="vspk">
-      <HintPath>..\..\..\..\..\..\..\..\vspk\vspk.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EnterpriseView.cs">
@@ -66,6 +66,18 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="NetworkView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NetworkView.Designer.cs">
+      <DependentUpon>NetworkView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="NSGView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NSGView.Designer.cs">
+      <DependentUpon>NSGView.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="EnterpriseView.resx">
@@ -73,6 +85,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NetworkView.resx">
+      <DependentUpon>NetworkView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NSGView.resx">
+      <DependentUpon>NSGView.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -1,4 +1,5 @@
 ﻿using net.nuagenetworks.vspk.v5_0;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -6,6 +7,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -32,42 +34,33 @@ namespace WindowsFormsApp1
             this.enterprise.NUId = enterpriseID;
             this.enterprise.fetch(this.session);
 
+            if (this.enterprise.NUAvatarType == Enterprise.EAvatarType.COMPUTEDURL)
+            {
+                // Modify the URL in case the VSD is behind a reverse proxy
+                Uri u = new Uri(this.enterprise.NUAvatarData);
+                Uri u1 = new Uri(session.getRestBaseUrl());
+                var builder = new UriBuilder(u);
+                builder.Host = u1.Host;
+                builder.Port = u1.Port;
+                string imageURI = builder.Uri.ToString();
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(imageURI);
+                request.ServerCertificateValidationCallback += (sender2, certificate, chain, sslPolicyErrors) => true;
+                WebResponse response = request.GetResponse();
+                Stream stream = response.GetResponseStream();
+                Image image = Image.FromStream(stream);
+                stream.Close();
+                pictureBox1.Image = image;
+            }
+
             updateDomainList();
+            updateVMList();
+            updateNSGs();
 
             this.textBox1.Text = this.enterprise.NUName;
             this.textBox2.Text = this.enterprise.NUDescription;
         }
 
-
-        private void CreateDomainZoneSubnet(string network, string netmask, string gateway)
-        {
-            Random rd = new Random();
-            string r = rd.Next().ToString();
-
-            DomainTemplate dt1 = new DomainTemplate();
-            dt1.NUName = "DomainTemplate"+r;
-            enterprise.createChild(session, dt1);
-            if (dt1.NUParentType != typeof(Enterprise)) throw new Exception("Failed");
-
-            Domain d1 = new Domain();
-            d1.NUName = "Domain"+r;
-            d1.NUTemplateID = dt1.NUId;
-            enterprise.createChild(session, d1);
-
-            Zone z1 = new Zone();
-            z1.NUName = "Zone1";
-            d1.createChild(session, z1);
-
-            Subnet s1 = new Subnet();
-            s1.NUName = "subnet1";
-            s1.NUNetmask = netmask;
-            s1.NUGateway = gateway;
-            s1.NUAddress = network;
-            z1.createChild(session, s1);
-            if (s1.NUParentType != typeof(Zone)) throw new Exception("Failed");
-
-            updateDomainList();
-        }
 
         private Domain getDomainByName(string name)
         {
@@ -81,7 +74,7 @@ namespace WindowsFormsApp1
         private void button1_Click(object sender, EventArgs e)
         {
             this.enterprise.NUDescription = this.textBox2.Text;
-            this.enterprise.save(session);
+            this.enterprise.save(session,1);
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -112,7 +105,8 @@ namespace WindowsFormsApp1
 
         private void button3_Click(object sender, EventArgs e)
         {
-            CreateDomainZoneSubnet(maskedTextBox1.Text, maskedTextBox2.Text, maskedTextBox3.Text);
+            NetworkView.createNetwork(this.session, this.enterprise);
+            updateDomainList();
         }
 
         private void updateDomainList()
@@ -131,22 +125,122 @@ namespace WindowsFormsApp1
 
         private void addNetwork(Domain domain)
         {
-            var n1 = treeView1.Nodes.Add(domain.NUId, domain.NUName);
+            var n1 = treeView1.Nodes.Add(domain.NUId, domain.NUName,0,0);
             var zf = domain.getZones();
             var zones = zf.fetch(this.session);
 
             if (zones !=null) foreach (var z in zones)
             {
-                var n2 = n1.Nodes.Add(z.NUId, z.NUName);
+                var n2 = n1.Nodes.Add(z.NUId, z.NUName,4,4);
                 var sf = z.getSubnets();
                 var subnets = sf.fetch(this.session);
 
                 if (subnets != null) foreach (var s in subnets)
                 {
-                    n2.Nodes.Add(s.NUId, s.NUName+" - " + s.NUAddress);
+                    n2.Nodes.Add(s.NUId, s.NUName+" - " + s.NUAddress,1,1);
                 }
             }
         }
 
+        private void updateVMList()
+        {
+            treeView2.Nodes.Clear();
+            var vf = this.enterprise.getVMs();
+            var vms = vf.fetch(this.session);
+
+            if (vms != null) foreach (var v in vms)
+            {
+                addVM(v);
+            }
+
+            treeView2.ExpandAll();
+        }
+
+        private void addVM(VM vm)
+        {
+            var n1 = treeView2.Nodes.Add(vm.NUId, vm.NUName,2,2);
+            var viff = vm.getVMInterfaces();
+            var vifs = viff.fetch(this.session);
+
+            if (vifs != null) foreach (var vif in vifs)
+            {
+                n1.Nodes.Add(vif.NUId, vif.NUName,3,3);
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode == null || treeView1.SelectedNode.Level != 2)
+            {
+                MessageBox.Show("Please select a subnet in the treeview above first");
+                return;
+            }
+
+            Random rd = new Random();
+            string r = rd.Next().ToString();
+            string mac = maskedTextBox6.Text;
+
+            VM vm = new VM();
+            vm.NUName = maskedTextBox5.Text;
+            vm.NUUUID = maskedTextBox4.Text;
+            VMInterface vmi = new VMInterface();
+            vmi.NUAttachedNetworkType = VMInterface.EAttachedNetworkType.SUBNET;
+            vmi.NUAttachedNetworkID = treeView1.SelectedNode.Name;
+            vmi.NUName = mac.Replace(':', '_');
+            vmi.NUMAC = mac;
+            vm.NUInterfaces = new List<VMInterface>();
+            vm.NUInterfaces.Add(vmi);
+            session.getMe().createChild(session,vm);
+            updateVMList();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode == null || treeView1.SelectedNode.Level != 2)
+            {
+                MessageBox.Show("Please select a subnet in the treeview first");
+                return;
+            }
+
+            NetworkView.editNetwork(this.session, treeView1.SelectedNode.Name);
+            updateDomainList();
+        }
+
+        private void groupBox4_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void updateNSGs()
+        {
+            var nsgf = this.enterprise.getNSGateways();
+            var nsgList = nsgf.fetch(this.session);
+            if (nsgList == null) return;
+
+            listBox1.Items.Clear();
+            foreach (var nsg in nsgList)
+            {
+                ComboboxItem ci = new ComboboxItem();
+                ci.Name = nsg.NUName;
+                ci.Id = nsg.NUId;
+                listBox1.Items.Add(ci);
+            }
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            NSGView.createNSG(this.session, this.enterprise);
+            this.updateNSGs();
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            if (listBox1.SelectedItem == null) return;
+            NSGateway nsg = new NSGateway();
+            nsg.NUId = ((ComboboxItem)listBox1.SelectedItem).Id;
+            nsg.fetch(this.session);
+            NSGView.editNSG(this.session, this.enterprise, nsg);
+            updateNSGs();
+        }
     }
 }
