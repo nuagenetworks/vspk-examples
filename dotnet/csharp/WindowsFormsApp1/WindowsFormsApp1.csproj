@@ -32,8 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="net.nuagenetworks.bambou">
-      <HintPath>..\..\..\..\..\..\..\..\vspk\net.nuagenetworks.bambou.dll</HintPath>
+    <Reference Include="net.nuagenetworks.bambou, Version=1.0.6510.36979, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\net.nuagenetworks.bambou.dll.1.1.0\lib\net452\net.nuagenetworks.bambou.dll</HintPath>
     </Reference>
     <Reference Include="net.nuagenetworks.vspk">
       <HintPath>..\..\..\..\..\..\..\..\vspk\net.nuagenetworks.vspk.dll</HintPath>
@@ -101,6 +101,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
