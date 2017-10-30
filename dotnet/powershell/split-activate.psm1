@@ -7,7 +7,7 @@
 [Reflection.Assembly]::LoadFrom("C:\vspk\net.nuagenetworks.vspk.dll")
 
 function Find-SubnetID($enterprise,$domain,$zone,$subnet) {
-    $s = new-object net.nuagenetworks.vspk.v5_0.VSDSession -argumentlist "csproot", "csproot", "csp", "https://135.121.117.224"
+    $s = new-object net.nuagenetworks.vspk.v5_0.VSDSession -argumentlist "csproot", "csproot", "csp", "https://vsd.local:8443"
     
     $ef = $s.getMe().getEnterprises();
     $e = $ef.fetch($s,"name == '$enterprise'", [NullString]::Value, $null, -1, -1, [NullString]::Value, $true)[0]    
@@ -25,7 +25,7 @@ function Find-SubnetID($enterprise,$domain,$zone,$subnet) {
 }
 
 function Split-Activate($subnetid, $vmUUID, $mac) {
-    $s = new-object net.nuagenetworks.vspk.v5_0.VSDSession -argumentlist "csproot", "csproot", "csp", "https://135.121.117.224"
+    $s = new-object net.nuagenetworks.vspk.v5_0.VSDSession -argumentlist "csproot", "csproot", "csp", "https://vsd.local:8443"
 
     $vm = new-object net.nuagenetworks.vspk.v5_0.VM
     $vm.NUName = $vmUUID
