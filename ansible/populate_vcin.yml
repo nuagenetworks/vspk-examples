@@ -1,0 +1,145 @@
+---
+- hosts: localhost
+
+#
+# Configure to match your environment
+#
+  vars:
+    nuage_auth:
+      api_username: csproot
+      api_password: csproot
+      api_enterprise: csp
+      api_url: https://localhost:8443
+      api_version: v5_0
+    customized_script_url: http://10.189.1.254/scripts/vrs-boot.sh
+    ovf_url: http://10.189.1.254/images/5.1.2/Nuage-VRS-5.1.2-80.ovf
+
+  tasks:
+  - name: Create vCenter
+    delegate_to: localhost
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: VCenter
+      state: present
+      match_filter: "name == 'vc.lab.local'"
+      properties:
+        name: "vc.lab.local"
+        user_name: "administrator@vsphere.local"
+        password: "password"
+        allow_data_dhcp: false
+        allow_mgmt_dhcp: false
+        customized_script_url: "{{ customized_script_url }}"
+        data_dns1: "0.0.0.0"
+        data_dns2: "0.0.0.0"
+        data_gateway: "0.0.0.0"
+        data_network_portgroup: "DATA-PG"
+        description: "vc.lab.local"
+        destination_mirror_port: "no_mirror"
+        generic_split_activation: false
+        http_port: 80
+        https_port: 443
+        ip_address: "vc.lab.local"
+        mgmt_dns1: "8.8.8.8"
+        mgmt_dns2: "0.0.0.0"
+        mgmt_gateway: "10.0.0.1"
+        mgmt_network_portgroup: "Management-PG"
+        mirror_network_portgroup: "MC-PG"
+        mtu: 9000
+        multicast_source_portgroup: "MC-PG"
+        ntp_server1: "10.189.1.254"
+        ntp_server2: "0.0.0.0"
+        ovf_url: "{{ ovf_url }}"
+        primary_nuage_controller: "172.189.80.70"
+        secondary_nuage_controller: "172.189.80.71"
+        remote_syslog_server_ip: "10.189.1.253"
+        remote_syslog_server_port: "514"
+        remote_syslog_server_type: "TCP"
+        separate_data_network: true
+        vm_network_portgroup: "Nuage-OVSPG"
+        v_require_nuage_metadata: true
+    register: nuage_vcenter
+
+  - name: Create datacenter
+    delegate_to: localhost
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: VCenterDataCenter
+      parent_type: VCenter
+      parent_id: "{{ nuage_vcenter.id }}"
+      state: present
+      properties:
+        name: "DC1"
+    register: nuage_datacenter
+
+  - name: Create ClusterA
+    delegate_to: localhost
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: VCenterCluster
+      parent_type: VCenterDataCenter
+      parent_id: "{{ nuage_datacenter.id }}"
+      state: present
+      match_filter: "name == 'ClusterA'"
+      properties:
+        name: "ClusterA"
+        v_require_nuage_metadata: true
+        generic_split_activation: false
+    register: nuage_cluster_1
+
+  - name: Create esxi01 hypervisor
+    delegate_to: localhost
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: VCenterHypervisor
+      parent_type: VCenterCluster
+      parent_id: "{{ nuage_cluster_1.id }}"
+      state: present
+      match_filter: "name == 'esxi01.lab.local'"
+      properties:
+        name: "esxi01.lab.local"
+        data_ip_address: "172.189.80.80"
+        data_netmask: "255.255.255.0"
+        description: "esxi01.lab.local"
+        hypervisor_ip: "esxi01.lab.local"
+        hypervisor_user: "root"
+        hypervisor_password: "password"
+        mgmt_ip_address: "10.189.1.80"
+        mgmt_netmask: "255.0.0.0"
+        vrs_mgmt_hostname: "vrs-esxi01.lab.local"
+    register: nuage_hypervisor_esxi01
+
+  - name: Create esxi02 hypervisor
+    delegate_to: localhost
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: VCenterHypervisor
+      parent_type: VCenterCluster
+      parent_id: "{{ nuage_cluster_1.id }}"
+      state: present
+      match_filter: "name == 'esxi02.lab.local'"
+      properties:
+        name: "esxi02.lab.local"
+        data_ip_address: "172.189.80.81"
+        data_netmask: "255.255.255.0"
+        description: "esxi02.lab.local"
+        hypervisor_ip: "esxi02.lab.local"
+        hypervisor_user: "root"
+        hypervisor_password: "password"
+        mgmt_ip_address: "10.189.1.81"
+        mgmt_netmask: "255.0.0.0"
+        vrs_mgmt_hostname: "vrs-esxi02.lab.local"
+    register: nuage_hypervisor_esxi02
+
+  - name: Deploy VRSs on Clusters 
+    delegate_to: localhost
+    nuage_vspk:
+      auth: "{{ nuage_auth }}"
+      type: Job
+      parent_type: VCenterCluster
+      parent_id: "{{ item }}"
+      state: present
+      properties:
+        command: "VCENTER_ADD_COMPUTERESOURCE_INSCOPE"
+    with_items:
+    - "{{ nuage_cluster_1.id }}"
+
