@@ -38,7 +38,7 @@ import logging
 import requests
 
 from prettytable import PrettyTable
-from vspk import v4_0 as vsdk
+from vspk import v5_0 as vsdk
 
 ether_types = {
     '0x0800': 'IPv4',

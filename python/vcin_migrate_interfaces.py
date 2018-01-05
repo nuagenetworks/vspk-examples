@@ -1,4 +1,4 @@
-from vspk.v4_0 import *
+from vspk.v5_0 import *
 import logging
 import argparse
 import re

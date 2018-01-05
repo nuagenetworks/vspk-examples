@@ -55,7 +55,7 @@ import requests
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v4_0 as vsdk
+from vspk import v5_0 as vsdk
 
 
 def get_args():

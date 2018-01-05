@@ -78,7 +78,7 @@ import logging
 import os.path
 import requests
 
-from vspk import v4_0 as vsdk
+from vspk import v5_0 as vsdk
 
 
 def get_args():

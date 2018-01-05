@@ -43,7 +43,7 @@ import requests
 import time
 
 from prettytable import PrettyTable
-from vspk import v4_0 as vsdk
+from vspk import v5_0 as vsdk
 
 statistics_valid_types = [
     'BYTES_IN',
