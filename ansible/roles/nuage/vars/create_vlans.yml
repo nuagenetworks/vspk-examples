@@ -1,0 +1,10 @@
+# rgname: Existing Redundancy Group Name
+# vrport: Existing Redundant Port Name
+# vlan: VLAN value
+# description: description of Port
+# mnemonic: mnemonic of Port
+# Example below
+vlans:
+- { rgname: US-EAST1a-LEAF01-LEAF02, vrport: lag-9, vlan: 2000, description: 'Compute1', mnemonic: 'Tenant' }
+- { rgname: US-EAST1a-LEAF01-LEAF02, vrport: lag-9, vlan: 2001, description: 'Compute1', mnemonic: 'Internal API' }
+- { rgname: US-EAST1a-LEAF01-LEAF02, vrport: lag-9, vlan: 2005, description: 'Compute1', mnemonic: 'Storage FE' }

@@ -1,0 +1,10 @@
+---
+- name: Find Redundancy group 
+  nuage_vspk:
+    auth: "{{ nuage_auth }}"
+    type: RedundancyGroup
+    command: find
+    properties:
+      name: "{{ RedundancyGroupName }}"
+  ignore_errors: yes
+  register: nuage_redundancy_group

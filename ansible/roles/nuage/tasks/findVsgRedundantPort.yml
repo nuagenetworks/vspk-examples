@@ -1,0 +1,12 @@
+---
+- name: Find VsgRedundantPort
+  nuage_vspk:
+    auth: "{{ nuage_auth }}"
+    type: VsgRedundantPort
+    parent_type: RedundancyGroup
+    parent_id: "{{ nuage_redundancy_group.id }}"
+    command: find
+    properties:
+      name: "{{ VsgRedundantPortName }}"
+  ignore_errors: yes
+  register: nuage_find_port
