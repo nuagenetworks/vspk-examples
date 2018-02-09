@@ -1,0 +1,9 @@
+---
+- name: Get Redundancy Group ID for "{{ RedundancyGroupName }}"
+  include_tasks: findRedundancyGroup.yml
+
+- name: Get Redundancy Port ID for "{{ VsgRedundantPortName }}"
+  include_tasks: findVsgRedundantPort.yml
+
+- name: Create vlan in "{{ VsgRedundantPortName }}"
+  include_tasks: createVLAN.yml

@@ -1,0 +1,14 @@
+---
+- name: Create new VLAN "{{ vlan_value }}" on rport "{{ VsgRedundantPortName }}" in rgroup "{{ RedundancyGroupName }}"
+  nuage_vspk:
+    auth: "{{ nuage_auth }}"
+    type: VLAN
+    parent_type: VsgRedundantPort
+    parent_id: "{{ nuage_find_port.id }}"
+    state: present
+    properties:
+      value: "{{ vlan_value }}"
+      description: " {{ vlan_description }}"
+      use_user_mnemonic: true
+      user_mnemonic: "{{ vlan_mnemonic }}"
+  ignore_errors: yes
