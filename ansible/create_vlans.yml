@@ -1,0 +1,31 @@
+---
+# Name: create_vlans.yml
+#
+# Auth: Auth is handled in roles/nuage/vars/main.yml
+#
+# Note:  A variable input file is used to provide the parameters.
+#        Example input file located in roles/nuage/vars/create_vlans.yml
+#
+# Command Line Example:  ansible-playbook create_vlans.yml -e vlan_file=create_vlans.yml 
+#
+- name: Create VLANS in Existing Redundency Group Ports
+  hosts: localhost
+  pre_tasks:
+    - name: Verify vlan_file
+      fail:
+        msg: "Parameter vlan_file should be defined. Exiting."
+      when: vlan_file is not defined
+  tasks:
+     - include_vars: "roles/nuage/vars/{{ vlan_file }}"
+     - include_role:
+          name: nuage
+          tasks_from: "create_vlan"
+       vars:
+          RedundancyGroupName: "{{ item.rgname }}"
+          VsgRedundantPortName: "{{ item.vrport }}"
+          vlan_value: "{{ item.vlan }}"
+          vlan_description: "{{ item.description }}"
+          vlan_mnemonic: "{{ item.mnemonic }}"
+       with_items:
+          - "{{ vlans }}"
+
