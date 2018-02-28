@@ -1,6 +1,5 @@
 ---
 - name: Create new VLAN "{{ vlan_value }}" on rport "{{ VsgRedundantPortName }}" in rgroup "{{ RedundancyGroupName }}"
-# connection: local
   nuage_vspk:
     auth: "{{ nuage_auth }}"
     type: VLAN
