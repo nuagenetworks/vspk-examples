@@ -11,5 +11,4 @@
       description: " {{ vlan_description }}"
       use_user_mnemonic: true
       user_mnemonic: "{{ vlan_mnemonic }}"
-  register: command_result
   ignore_errors: yes
