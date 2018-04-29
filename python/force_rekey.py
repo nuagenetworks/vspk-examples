@@ -16,6 +16,15 @@ import time
 
 from vspk import v5_0 as vspk
 
+# Login variables
+n_username = 'csproot'
+n_password = 'csproot'
+n_org = 'csp'
+api_url = 'https://10.167.60.21:8443'
+
+# script variables
+org_name = '521_CATS_FIXED'
+job_timeout = 600  # in seconds
 
 def is_job_ready(job, timeout=600):
     """
@@ -33,17 +42,6 @@ def is_job_ready(job, timeout=600):
         time.sleep(1)
     print('ERROR :: Job {} failed to return its status in {}sec interval'.format(
         job.command, timeout))
-
-
-# Login variables
-n_username = 'csproot'
-n_password = 'csproot'
-n_org = 'csp'
-api_url = 'https://10.167.60.21:8443'
-
-# script variables
-org_name = '521_CATS_FIXED'
-job_timeout = 600  # in seconds
 
 nuage_session = vspk.NUVSDSession(
     username=n_username,
