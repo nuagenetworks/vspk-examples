@@ -4,7 +4,7 @@
     auth: "{{ nuage_auth }}"
     type: VLAN
     parent_type: VsgRedundantPort
-    parent_id: "{{ nuage_find_port.id }}"
+    parent_id: "{{ rgport_id }}"
     state: present
     properties:
       value: "{{ vlan_value }}"

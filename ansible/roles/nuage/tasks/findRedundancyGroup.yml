@@ -1,5 +1,5 @@
 ---
-- name: Find Redundancy group 
+- name: Find {{ RedundancyGroupName }} Redundancy Group 
   nuage_vspk:
     auth: "{{ nuage_auth }}"
     type: RedundancyGroup
@@ -8,3 +8,13 @@
       name: "{{ RedundancyGroupName }}"
   ignore_errors: yes
   register: nuage_redundancy_group
+  when:
+    - PriorRGName is not defined or PriorRGName != RedundancyGroupName
+
+
+- name: Set Prior Redundancy Group Name
+  set_fact:
+    PriorRGName: "{{ RedundancyGroupName }}" 
+    rgroup_id: "{{ nuage_redundancy_group.id }}"
+  when:
+    - PriorRGName is not defined or PriorRGName != RedundancyGroupName

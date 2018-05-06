@@ -1,12 +1,21 @@
 ---
-- name: Find VsgRedundantPort
+- name: Find VsgRedundantPort {{ VsgRedundantPortName }} in {{ RedundancyGroupName }}
   nuage_vspk:
     auth: "{{ nuage_auth }}"
     type: VsgRedundantPort
     parent_type: RedundancyGroup
-    parent_id: "{{ nuage_redundancy_group.id }}"
+    parent_id: "{{ rgroup_id }}"
     command: find
     properties:
       name: "{{ VsgRedundantPortName }}"
   ignore_errors: yes
   register: nuage_find_port
+  when:
+    - PriorRPortName is not defined or PriorRPortName != VsgRedundantPortName
+    
+- name: Set Prior Redundancy Port Name
+  set_fact:
+    PriorRPortName: "{{ VsgRedundantPortName }}"
+    rgport_id: "{{ nuage_find_port.id }}"
+  when:
+    - PriorRPortName is not defined or PriorRPortName != VsgRedundantPortName
