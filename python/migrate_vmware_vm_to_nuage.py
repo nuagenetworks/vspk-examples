@@ -11,6 +11,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2016-03-20 - 1.0
+2018-05-14 - 1.1 - Added support for flushing the NIC connection so the OS reinitiates its network stack (useful for clearing arp tables)
 
 --- Usage ---
 run 'python migrate_vmware_vm_to_nuage.py -h' for an overview
@@ -40,9 +41,8 @@ import getpass
 import ipaddress
 import logging
 import re
-import requests
-
 from time import sleep
+import requests
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
 from vspk import v5_0 as vsdk
@@ -55,6 +55,7 @@ def get_args():
 
     parser = argparse.ArgumentParser(description="Tool to migrate a VMware VM, with VMware tools or open-vm-tools, to a Nuage VSP environment. In default mode it will gather the VMs IP and check if it is part of the specified subnet. If it is, it will populate the VM with the correct metadata and reconnect the interface to the OVS-PG. In split activation mode, it will gather the MAC, UUID and IP from the VM and create a vPort and VM before reconnecting the nic to the OVS-PG.")
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
+    parser.add_argument('-f', '--flush', required=False, help='Flush the VM nic connection, this disconnects the VM interface and reconnects it.', dest='flush', action='store_true')
     parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
     parser.add_argument('-m', '--mode', required=False, help='Select between metadata and split-activation', dest='mode', type=str, choices=['metadata', 'split-activation'], default='medatada')
     parser.add_argument('--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
@@ -86,21 +87,24 @@ def get_vcenter_object(logger, vc, vimtype, name):
     content = vc.RetrieveContent()
     obj = None
     container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
-    for c in container.view:
-        logger.debug('Checking object: %s' % c.name)
-        if c.name == name:
-            logger.debug('Found object: %s' % c.name)
-            obj = c
+    for view in container.view:
+        logger.debug('Checking object: %s' % view.name)
+        if view.name == name:
+            logger.debug('Found object: %s' % view.name)
+            obj = view
             break
     return obj
 
 
 def get_nuage_object(logger, parent, nuagetype, search_query, single_entity=False):
+    """
+    Get a Nuage opbject matching a search query
+    """
     logger.debug('Finding Nuage entities for object matching search query "%s"' % search_query)
-    if single_entity is False:
-        entities = parent.fetcher_for_rest_name(nuagetype.lower()).get(filter=search_query)
-    else:
+    if single_entity:
         entities = parent.fetcher_for_rest_name(nuagetype.lower()).get_first(filter=search_query)
+    else:
+        entities = parent.fetcher_for_rest_name(nuagetype.lower()).get(filter=search_query)
     return entities
 
 
@@ -112,6 +116,7 @@ def main():
     # Handling arguments
     args = get_args()
     debug = args.debug
+    flush = args.flush
     log_file = None
     if args.logfile:
         log_file = args.logfile
@@ -272,7 +277,7 @@ def main():
                 if cur_net.ipConfig.ipAddress:
                     for cur_ip in cur_net.ipConfig.ipAddress:
                         logger.debug('Checking ip address %s for VM %s' % (cur_ip.ipAddress, vcenter_vm))
-                        if re.match('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', cur_ip.ipAddress) and cur_ip.ipAddress != '127.0.0.1':
+                        if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', cur_ip.ipAddress) and cur_ip.ipAddress != '127.0.0.1':
                             vc_vm_ip = cur_ip.ipAddress
                             break
             if vc_vm_mac and vc_vm_ip:
@@ -297,7 +302,7 @@ def main():
             vm_option_values.append(vim.option.OptionValue(key='nuage.user', value=nuage_vm_user))
             # IP
             vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.ip', value=vc_vm_ip))
-            if type(nc_subnet) is vsdk.NUSubnet:
+            if isinstance(nc_subnet) is vsdk.NUSubnet:
                 nc_zone = vsdk.NUZone(id=nc_subnet.parent_id)
                 nc_zone.fetch()
                 nc_domain = vsdk.NUDomain(id=nc_zone.parent_id)
@@ -381,7 +386,7 @@ def main():
         vc_nicspec.device.backing.port.switchUuid = vc_dvs_pg.config.distributedVirtualSwitch.uuid
         vc_nicspec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
         vc_nicspec.device.connectable.startConnected = True
-        vc_nicspec.device.connectable.connected = True
+        vc_nicspec.device.connectable.connected = not flush
         vc_nicspec.device.connectable.allowGuestControl = True
         vc_vm_nic_reconfig = vim.vm.ConfigSpec(deviceChange=[vc_nicspec])
 
@@ -403,6 +408,34 @@ def main():
                 run_loop = False
                 break
             sleep(1)
+
+        if flush:
+            vc_nicspec = vim.vm.device.VirtualDeviceSpec()
+            vc_nicspec.operation = vim.vm.device.VirtualDeviceSpec.Operation.edit
+            vc_nicspec.device = vc_vm_nic 
+            vc_nicspec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
+            vc_nicspec.device.connectable.startConnected = True
+            vc_nicspec.device.connectable.connected = True
+            vc_nicspec.device.connectable.allowGuestControl = True
+            vc_vm_nic_reconfig = vim.vm.ConfigSpec(deviceChange=[vc_nicspec])
+            logger.info('Reconnecting NIC. This might take a couple of seconds')
+            config_task = vc_vm.ReconfigVM_Task(spec=vc_vm_nic_reconfig)
+            logger.debug('Waiting for the nic change to be applied')
+            run_loop = True
+            while run_loop:
+                info = config_task.info
+                if info.state == vim.TaskInfo.State.success:
+                    logger.debug('Nic change applied')
+                    run_loop = False
+                    break
+                elif info.state == vim.TaskInfo.State.error:
+                    if info.error.fault:
+                        logger.info('Applying nic changes has quit with error: %s' % info.error.fault.faultMessage)
+                    else:
+                        logger.info('Applying nic changes has quit with cancelation')
+                    run_loop = False
+                    break
+                sleep(1)
 
         logger.info('Succesfully attached VM %s to Nuage subnet %s, in mode %s' % (vcenter_vm, nuage_vm_subnet, mode))
 
