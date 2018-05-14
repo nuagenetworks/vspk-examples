@@ -43,6 +43,8 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
     optional arguments:
       -h, --help            show this help message and exit
       -d, --debug           Enable debug output
+      -f, --flush           Flush the VM nic connection, this disconnects the VM 
+                            interface and reconnects it
       -l LOGFILE, --log-file LOGFILE
                             File to log to (default = stdout)
       -m {metadata,split-activation}, --mode {metadata,split-activation}
@@ -106,6 +108,6 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
     python migrate_vmware_vm_to_nuage.py --nuage-enterprise csp --nuage-host 10.189.2.254 --nuage-user csproot --nuage-vm-user hradmin --nuage-vm-enterprise Finance --nuage-vm-subnet L2-Domain --vcenter-host vc01.fi.company.tld --vcenter-user administrator@vsphere.local --vcenter-port-group Nuage-VM-PG1 --vcenter-vm LEGACY-VM -S -m split-activation
 
 ### Requirements ###
-* Nuage VSPK/VSDK (3.2+)
+* Nuage VSPK/VSDK (5.0+)
 * pyvmomi (5.1+)
 * ipaddress (pip install ipaddress)
