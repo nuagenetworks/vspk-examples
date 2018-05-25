@@ -302,7 +302,7 @@ def main():
             vm_option_values.append(vim.option.OptionValue(key='nuage.user', value=nuage_vm_user))
             # IP
             vm_option_values.append(vim.option.OptionValue(key='nuage.nic0.ip', value=vc_vm_ip))
-            if isinstance(nc_subnet) is vsdk.NUSubnet:
+            if isinstance(nc_subnet, vsdk.NUSubnet):
                 nc_zone = vsdk.NUZone(id=nc_subnet.parent_id)
                 nc_zone.fetch()
                 nc_domain = vsdk.NUDomain(id=nc_zone.parent_id)
