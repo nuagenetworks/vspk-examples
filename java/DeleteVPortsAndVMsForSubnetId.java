@@ -18,18 +18,18 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class DeleteVPortsAndVMsForSubnetId {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_SUBNET_ID = "99142dd3-2980-40a6-8280-8ec0c0d2234d";
-	private static final VSDSession session;
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
+    public static void main(String[] args) throws RestException {
         System.out.println("Deleting objects associated with Subnet " + MY_SUBNET_ID);
-		session.start();
-		DeleteVPortsAndVMsForSubnetId instance = new DeleteVPortsAndVMsForSubnetId();
+        session.start();
+        DeleteVPortsAndVMsForSubnetId instance = new DeleteVPortsAndVMsForSubnetId();
 
         Subnet subnet = instance.fetchSubnetById(MY_SUBNET_ID);
         if (subnet != null) {
@@ -37,7 +37,7 @@ public class DeleteVPortsAndVMsForSubnetId {
         } else {
             System.out.println("Operation not performed due to missing Subnet " + MY_SUBNET_ID);
         }
-	}
+    }
 
     private void deleteObjectsOfSubnet(Subnet subnet) throws RestException {
         this.deleteAllVMsOfSubnet(subnet);

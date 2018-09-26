@@ -27,19 +27,19 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class DeleteLevel3DomainAndItsAssociates {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
-	private static final String MY_L3_DOMAIN_NAME = "Little Domain1";
-	private static final VSDSession session;
+    private static final String MY_L3_DOMAIN_NAME = "Little Domain1";
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
-		System.out.println("Deleting Level 3 Domain " + MY_L3_DOMAIN_NAME + " of Enterprise " + MY_ENTERPRISE_NAME);
-		session.start();
-		DeleteLevel3DomainAndItsAssociates instance = new DeleteLevel3DomainAndItsAssociates();
+    public static void main(String[] args) throws RestException {
+        System.out.println("Deleting Level 3 Domain " + MY_L3_DOMAIN_NAME + " of Enterprise " + MY_ENTERPRISE_NAME);
+        session.start();
+        DeleteLevel3DomainAndItsAssociates instance = new DeleteLevel3DomainAndItsAssociates();
         Enterprise enterprise = instance.fetchEnterpriseByName(MY_ENTERPRISE_NAME);
         if (enterprise != null) {
             Domain domain = instance.fetchLevel3DomainByNameForEnterprise(MY_L3_DOMAIN_NAME, enterprise);
@@ -49,11 +49,11 @@ public class DeleteLevel3DomainAndItsAssociates {
             } else {
                 System.out.println("Operation not performed due to missing L3 Domain " + MY_L3_DOMAIN_NAME);
             }
-        
+
         } else {
             System.out.println("Operation not performed due to missing Enterprise " + MY_ENTERPRISE_NAME);
         }
-	}
+    }
 
     private void deleteObjectsOfDomainForEnterprise(Domain l3Domain) throws RestException {
         this.deleteAllVMsOfDomain(l3Domain);
@@ -63,12 +63,12 @@ public class DeleteLevel3DomainAndItsAssociates {
         l3Domain.delete();
     }
 
-	private Domain fetchLevel3DomainByNameForEnterprise(String domainName, Enterprise enterprise) throws RestException {
+    private Domain fetchLevel3DomainByNameForEnterprise(String domainName, Enterprise enterprise) throws RestException {
         String filter = String.format("name == '%s'", domainName);
         DomainsFetcher fetcher = enterprise.getDomains();
         Domain domain = fetcher.getFirst(filter, null, null, null, null, null, true);
         return domain;
-	}
+    }
 
     private void deleteAllVMsOfDomain(Domain l3Domain) throws RestException {
         VMsFetcher fetcher = l3Domain.getVMs();

@@ -47,7 +47,7 @@ public class CreateSubnetForZoneId {
             System.out.println("Operation not performed due to missing Zone " + MY_ZONE_ID);
         }
     }
-    
+
     private Subnet createSubnetForZone(SubnetDescriptor subnetDescriptor, Zone zone) throws RestException {
         Subnet subnet = this.fetchSubnetByNameForZone(subnetDescriptor.subnetName, zone);
         if (subnet == null) {

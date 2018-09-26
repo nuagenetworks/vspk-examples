@@ -18,7 +18,7 @@ public class ConnectToVsdUsingPassword {
         String organization = "csp";
 
         VSDSession session = new VSDSession(username, password, organization, MY_VSD_SERVER_PORT);
-        
+
         session.start();
 
         EnterprisesFetcher fetcher = session.getMe().getEnterprises();
@@ -26,7 +26,7 @@ public class ConnectToVsdUsingPassword {
 
         System.out.println("Number of Enterprises found : " + enterprises.size());
         for (Enterprise enterprise : enterprises) {
-           System.out.println("Enterprise: " + enterprise);
+            System.out.println("Enterprise: " + enterprise);
         }
     }
 }

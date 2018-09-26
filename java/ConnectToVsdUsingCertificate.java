@@ -27,7 +27,7 @@ public class ConnectToVsdUsingCertificate {
 
         System.out.println("Number of Enterprises found : " + enterprises.size());
         for (Enterprise enterprise : enterprises) {
-           System.out.println("Enterprise: " + enterprise);
+            System.out.println("Enterprise: " + enterprise);
         }
     }
 }

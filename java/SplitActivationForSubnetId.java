@@ -15,23 +15,24 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
 
 /**
  * Idempotently creates a VPort, VMInterface, and VM object for a Subnet, as would be typical steps during Split Activation
+ * 
  * Precondition - requires a running VSD server at port matching MY_VSD_SERVER_PORT
  * Precondition - requires an existing Subnet matching MY_SUBNET_ID
  */
 public class SplitActivationForSubnetId {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_SUBNET_ID = "99142dd3-2980-40a6-8280-8ec0c0d2234d";
-	private static final String MY_VPORT_NAME = "MySplitActivationVPort";
+    private static final String MY_VPORT_NAME = "MySplitActivationVPort";
     private static final String MY_VM_NAME = "MySplitActivationVM";
     private static final String MY_VM_UUID = "12345678-eeee-abcd-abcd-123456789012";
     private static final String MY_VM_INTERFACE_NAME = "MySplitActivationInterface";
     private static final String MY_VM_INTERFACE_MAC = "00:11:22:33:44:77";
     private static final String MY_VM_INTERFACE_IP = "10.117.18.5";
-	private static final VSDSession session;
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
     public static class VmDescriptor {
         public String vportName;
@@ -51,12 +52,13 @@ public class SplitActivationForSubnetId {
         }
     }
 
-	public static void main(String[] args) throws RestException {
-		System.out.println("Creating VM " + MY_VPORT_NAME + " in Subnet " + MY_SUBNET_ID);
-		session.start();
-		SplitActivationForSubnetId instance = new SplitActivationForSubnetId();
+    public static void main(String[] args) throws RestException {
+        System.out.println("Creating VM " + MY_VPORT_NAME + " in Subnet " + MY_SUBNET_ID);
+        session.start();
+        SplitActivationForSubnetId instance = new SplitActivationForSubnetId();
 
-		VmDescriptor vmDescriptor = new VmDescriptor(MY_VPORT_NAME, MY_VM_UUID, MY_VM_NAME, MY_VM_INTERFACE_NAME, MY_VM_INTERFACE_MAC, MY_VM_INTERFACE_IP);
+        VmDescriptor vmDescriptor = new VmDescriptor(MY_VPORT_NAME, MY_VM_UUID, MY_VM_NAME, MY_VM_INTERFACE_NAME, MY_VM_INTERFACE_MAC,
+                MY_VM_INTERFACE_IP);
 
         Subnet subnet = instance.fetchSubnetById(MY_SUBNET_ID);
         if (subnet != null) {
@@ -65,7 +67,7 @@ public class SplitActivationForSubnetId {
         } else {
             System.out.println("Operation not performed due to missing Subnet " + MY_SUBNET_ID);
         }
-	}
+    }
 
     private VPort createVPortForSubnet(VmDescriptor vmDescriptor, Subnet subnet) throws RestException {
         VPort vport = this.fetchVPortByNameForSubnet(vmDescriptor.vportName, subnet);
@@ -82,7 +84,7 @@ public class SplitActivationForSubnetId {
         }
         return vport;
     }
-    
+
     private VM createVMForVPort(VPort vPort, VmDescriptor vmDescriptor) throws RestException {
         VM vm = this.fetchVMByUUIDForVPort(vmDescriptor.vmUUID, vPort);
         if (vm == null) {

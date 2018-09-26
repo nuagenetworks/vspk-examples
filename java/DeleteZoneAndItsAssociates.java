@@ -20,18 +20,18 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class DeleteZoneAndItsAssociates {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_ZONE_ID = "db523956-4051-4c29-ba16-1f09f8eb3ca1";
-	private static final VSDSession session;
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
+    public static void main(String[] args) throws RestException {
         System.out.println("Deleting objects associated with Zone " + MY_ZONE_ID);
-		session.start();
-		DeleteZoneAndItsAssociates instance = new DeleteZoneAndItsAssociates();
+        session.start();
+        DeleteZoneAndItsAssociates instance = new DeleteZoneAndItsAssociates();
 
         Zone zone = instance.fetchZoneById(MY_ZONE_ID);
         if (zone != null) {
@@ -39,7 +39,7 @@ public class DeleteZoneAndItsAssociates {
         } else {
             System.out.println("Operation not performed due to missing Zone " + MY_ZONE_ID);
         }
-	}
+    }
 
     private void deleteObjectsOfZone(Zone zone) throws RestException {
         this.deleteAllVMsOfZone(zone);
