@@ -13,16 +13,16 @@ import net.nuagenetworks.vspk.v5_0.fetchers.L2DomainTemplatesFetcher;
  * Precondition - requires an existing Enterprise matching MY_ENTERPRISE_NAME
  */
 public class CreateLevel2DomainTemplateForEnterpriseName {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
-	private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
-	private static final String MY_L2_TEMPLATE_NAME = "MyLittleLevel2DomainTemplate";
-	private static final VSDSession session;
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
+    private static final String MY_L2_TEMPLATE_NAME = "MyLittleLevel2DomainTemplate";
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
+    public static void main(String[] args) throws RestException {
         System.out.println("Creating Level 2 Domain Template : " + MY_L2_TEMPLATE_NAME + " in Enterprise " + MY_ENTERPRISE_NAME);
         session.start();
         CreateLevel2DomainTemplateForEnterpriseName instance = new CreateLevel2DomainTemplateForEnterpriseName();
@@ -32,10 +32,10 @@ public class CreateLevel2DomainTemplateForEnterpriseName {
         } else {
             System.out.println("Operation not performed due to missing Enterprise " + MY_ENTERPRISE_NAME);
         }
-	}
+    }
 
-	private L2DomainTemplate createLevel2DomainTemplateInEnterprise(String templateName, Enterprise enterprise) throws RestException {
-	    L2DomainTemplate template = this.fetchLevel2DomainTemplateByNameForEnterprise(templateName, enterprise);
+    private L2DomainTemplate createLevel2DomainTemplateInEnterprise(String templateName, Enterprise enterprise) throws RestException {
+        L2DomainTemplate template = this.fetchLevel2DomainTemplateByNameForEnterprise(templateName, enterprise);
         if (template == null) {
             template = new L2DomainTemplate();
             template.setName(templateName);
@@ -47,7 +47,7 @@ public class CreateLevel2DomainTemplateForEnterpriseName {
             System.out.println("Old Level 2 Domain Template " + template.getName() + " already created at " + createDate.toString());
         }
         return template;
-	}
+    }
 
     private Enterprise fetchEnterpriseByName(String enterpriseName) throws RestException {
         String filter = String.format("name == '%s'", enterpriseName);

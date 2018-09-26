@@ -14,18 +14,18 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VCentersFetcher;
  * Precondition - requires an existing VCenter matching MY_VCENTER_NAME
  */
 public class DeleteVCenterAndItsAssociates {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_VCENTER_NAME = "MyLittleVCenter";
-	private static final VSDSession session;
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
-		System.out.println("Deleting VCenter " + MY_VCENTER_NAME);
-		session.start();
-		DeleteVCenterAndItsAssociates instance = new DeleteVCenterAndItsAssociates();
+    public static void main(String[] args) throws RestException {
+        System.out.println("Deleting VCenter " + MY_VCENTER_NAME);
+        session.start();
+        DeleteVCenterAndItsAssociates instance = new DeleteVCenterAndItsAssociates();
         VCenter vCenter = instance.fetchVCenterByName(MY_VCENTER_NAME);
         if (vCenter != null) {
             instance.deleteAllDatacentersOfVCenter(vCenter);
@@ -35,7 +35,7 @@ public class DeleteVCenterAndItsAssociates {
             System.out.println("Operation not performed due to missing VCenter " + MY_VCENTER_NAME);
         }
     }
-    
+
     private void deleteAllDatacentersOfVCenter(VCenter vCenter) throws RestException {
         VCenterDataCentersFetcher fetcher = vCenter.getVCenterDataCenters();
         List<VCenterDataCenter> datacenters = fetcher.get();

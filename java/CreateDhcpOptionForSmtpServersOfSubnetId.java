@@ -15,30 +15,30 @@ import net.nuagenetworks.vspk.v5_0.fetchers.SubnetsFetcher;
  * Precondition - requires an existing Subnet matching MY_SUBNET_ID
  */
 public class CreateDhcpOptionForSmtpServersOfSubnetId {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_DHCP_OPTION_FOR_SMTP_AS_HEX = "45";
-	private static final String MY_SUBNET_ID = "eb788945-d6f3-4fcf-af01-34e24395a0f4";
-	private static final List<String> MY_SMTPS = new ArrayList<>(Arrays.asList("10.100.10.10", "10.100.10.11", "10.100.10.12", "10.100.10.13"));
-	private static final VSDSession session;
+    private static final String MY_SUBNET_ID = "eb788945-d6f3-4fcf-af01-34e24395a0f4";
+    private static final List<String> MY_SMTPS = new ArrayList<>(Arrays.asList("10.100.10.10", "10.100.10.11", "10.100.10.12", "10.100.10.13"));
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
-		System.out.println("Creating DHCP Option for SMTP Servers in Subnet : " + MY_SUBNET_ID);
-		session.start();
-		CreateDhcpOptionForSmtpServersOfSubnetId instance = new CreateDhcpOptionForSmtpServersOfSubnetId();
+    public static void main(String[] args) throws RestException {
+        System.out.println("Creating DHCP Option for SMTP Servers in Subnet : " + MY_SUBNET_ID);
+        session.start();
+        CreateDhcpOptionForSmtpServersOfSubnetId instance = new CreateDhcpOptionForSmtpServersOfSubnetId();
 
-		Subnet subnet = instance.fetchSubnetById(MY_SUBNET_ID);
+        Subnet subnet = instance.fetchSubnetById(MY_SUBNET_ID);
         if (subnet != null) {
             instance.createDhcpOptionForSubnet(MY_DHCP_OPTION_FOR_SMTP_AS_HEX, MY_SMTPS, subnet);
         } else {
             System.out.println("Operation not performed due to missing Subnet " + MY_SUBNET_ID);
         }
-	}
+    }
 
-	private DHCPOption createDhcpOptionForSubnet(String hexOptionType, List<String> servers, Subnet subnet) throws RestException {
+    private DHCPOption createDhcpOptionForSubnet(String hexOptionType, List<String> servers, Subnet subnet) throws RestException {
         DHCPOption option = this.fetchDHCPOptionByNameForSubnet(hexOptionType, subnet);
         if (option == null) {
             option = new DHCPOption();
@@ -53,7 +53,7 @@ public class CreateDhcpOptionForSmtpServersOfSubnetId {
             System.out.println("Old DHCP Option " + option.getActualType() + " already created at " + createDate.toString());
         }
         return option;
-	}
+    }
 
     private DHCPOption fetchDHCPOptionByNameForSubnet(String hexOptionType, Subnet subnet) throws RestException {
         String filter = String.format("type == '%s'", hexOptionType);

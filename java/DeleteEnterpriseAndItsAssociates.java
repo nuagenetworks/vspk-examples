@@ -21,33 +21,31 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VMsFetcher;
 import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
 
 /**
- * Idempotently deletes objects associated with a given VSD Enterprise such as its
- *                      VMs, VPorts, Subnets, Zones, L2 and L3 Domains, L2 and L3 Domain Templates and finally the Enterprise itself
+ * Idempotently deletes objects associated with a given VSD Enterprise such as its VMs, VPorts, Subnets, Zones, Domains, Domain
+ *      Templates and finally the Enterprise itself
  * 
  * Precondition - requires a running VSD server at port matching MY_VSD_SERVER_PORT
  * Precondition - requires an existing Enterprise matching MY_ENTERPRISE_NAME
- * Precondition - requires 0 or more existing L2 Domains
- * Precondition - requires 0 or more existing L2 Domain Templates
- * Precondition - requires 0 or more existing L3 Domains
- * Precondition - requires 0 or more existing L3 Domain Templates
+ * Precondition - requires 0 or more existing L2 Domains Precondition - requires 0 or more existing L2 Domain Templates
+ * Precondition - requires 0 or more existing L3 Domains Precondition - requires 0 or more existing L3 Domain Templates
  * Precondition - requires 0 or more existing Zones
  * Precondition - requires 0 or more existing Subnets
  * Precondition - requires 0 or more existing VPorts
  * Precondition - requires 0 or more existing VMs
  */
 public class DeleteEnterpriseAndItsAssociates {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
-	private static final VSDSession session;
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
-		System.out.println("Deleting objects associated with Enterprise " + MY_ENTERPRISE_NAME);
-		session.start();
-		DeleteEnterpriseAndItsAssociates instance = new DeleteEnterpriseAndItsAssociates();
+    public static void main(String[] args) throws RestException {
+        System.out.println("Deleting objects associated with Enterprise " + MY_ENTERPRISE_NAME);
+        session.start();
+        DeleteEnterpriseAndItsAssociates instance = new DeleteEnterpriseAndItsAssociates();
         Enterprise enterprise = instance.fetchEnterpriseByName(MY_ENTERPRISE_NAME);
         if (enterprise != null) {
             instance.deleteEnterprise(enterprise);
@@ -55,15 +53,15 @@ public class DeleteEnterpriseAndItsAssociates {
         } else {
             System.out.println("Delete operation not performed due to missing Enterprise " + MY_ENTERPRISE_NAME);
         }
-	}
-	
-	private void deleteEnterprise(Enterprise enterprise) throws RestException {
-	    this.deleteAllLevel3DomainsOfEnterprise(enterprise);
-	    this.deleteAllLevel3DomainTemplatesOfEnterprise(enterprise);
-	    this.deleteAllLevel2DomainsOfEnterprise(enterprise);
-	    this.deleteAllLevel2DomainTemplatesOfEnterprise(enterprise);
-	    enterprise.delete();
-	}
+    }
+
+    private void deleteEnterprise(Enterprise enterprise) throws RestException {
+        this.deleteAllLevel3DomainsOfEnterprise(enterprise);
+        this.deleteAllLevel3DomainTemplatesOfEnterprise(enterprise);
+        this.deleteAllLevel2DomainsOfEnterprise(enterprise);
+        this.deleteAllLevel2DomainTemplatesOfEnterprise(enterprise);
+        enterprise.delete();
+    }
 
     private Enterprise fetchEnterpriseByName(String enterpriseName) throws RestException {
         String filter = String.format("name == '%s'", enterpriseName);
@@ -139,13 +137,13 @@ public class DeleteEnterpriseAndItsAssociates {
         }
     }
 
-	private void deleteAllZonesOfDomain(Domain l3Domain) throws RestException {
-		ZonesFetcher fetcher = l3Domain.getZones();
-		List<Zone> zones = fetcher.get();
-		for (Zone zone : zones) {
-			System.out.println("Deleting Zone " + zone.getName());
-			zone.delete();
-		}
-	}
+    private void deleteAllZonesOfDomain(Domain l3Domain) throws RestException {
+        ZonesFetcher fetcher = l3Domain.getZones();
+        List<Zone> zones = fetcher.get();
+        for (Zone zone : zones) {
+            System.out.println("Deleting Zone " + zone.getName());
+            zone.delete();
+        }
+    }
 
 }

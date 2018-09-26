@@ -30,109 +30,109 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires an existing Enterprise matching MY_ENTERPRISE_NAME
  */
 public class GenericNetworkProvisioning {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
 
-	private List<VMDescriptor> vmInventoryList= new ArrayList<VMDescriptor>() {
-		{
-			add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1A", "VMInterface1",
-				"VM1", "10.117.18.0", "255.255.255.0", "11111111-1234-abcd-abcd-123456789000", "00:00:22:33:44:55"));
-			add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1B", "VMInterface2",
-				"VM2", "10.117.18.0", "255.255.255.0", "22222222-1234-abcd-abcd-123456789000", "00:11:22:33:44:55"));
+    private List<VMDescriptor> vmInventoryList = new ArrayList<VMDescriptor>() {
+        {
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1A", "VMInterface1", "VM1", "10.117.18.0",
+                    "255.255.255.0", "11111111-1234-abcd-abcd-123456789000", "00:00:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1B", "VMInterface2", "VM2", "10.117.18.0",
+                    "255.255.255.0", "22222222-1234-abcd-abcd-123456789000", "00:11:22:33:44:55"));
 
-			add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2A", "VMInterface2",
-				"VM1", "10.117.19.0", "255.255.255.0", "33333333-1234-abcd-abcd-123456789000", "00:22:22:33:44:55"));
-			add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2B", "VMInterface1",
-				"VM2", "10.117.19.0", "255.255.255.0", "44444444-1234-abcd-abcd-123456789000", "00:33:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2A", "VMInterface2", "VM1", "10.117.19.0",
+                    "255.255.255.0", "33333333-1234-abcd-abcd-123456789000", "00:22:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2B", "VMInterface1", "VM2", "10.117.19.0",
+                    "255.255.255.0", "44444444-1234-abcd-abcd-123456789000", "00:33:22:33:44:55"));
 
-			add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3A", "VMInterface1",
-				"VM1", "10.117.20.0", "255.255.255.0", "55555555-1234-abcd-abcd-123456789000", "00:44:22:33:44:55"));
-			add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3B", "VMInterface2",
-				"VM2", "10.117.20.0", "255.255.255.0", "66666666-1234-abcd-abcd-123456789000", "00:55:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3A", "VMInterface1", "VM1", "10.117.20.0",
+                    "255.255.255.0", "55555555-1234-abcd-abcd-123456789000", "00:44:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3B", "VMInterface2", "VM2", "10.117.20.0",
+                    "255.255.255.0", "66666666-1234-abcd-abcd-123456789000", "00:55:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4A", "VMInterface1",
-                "VM1", "10.117.21.0", "255.255.255.0", "77777777-1234-abcd-abcd-123456789000", "00:66:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4B", "VMInterface2",
-                "VM2", "10.117.21.0", "255.255.255.0", "88888888-1234-abcd-abcd-123456789000", "00:77:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4A", "VMInterface1", "VM1", "10.117.21.0",
+                    "255.255.255.0", "77777777-1234-abcd-abcd-123456789000", "00:66:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4B", "VMInterface2", "VM2", "10.117.21.0",
+                    "255.255.255.0", "88888888-1234-abcd-abcd-123456789000", "00:77:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5A", "VMInterface2",
-                "VM1", "10.117.22.0", "255.255.255.0", "99999999-1234-abcd-abcd-123456789000", "00:88:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5B", "VMInterface1",
-                "VM2", "10.117.22.0", "255.255.255.0", "00000000-1234-abcd-abcd-123456789000", "00:99:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5A", "VMInterface2", "VM1", "10.117.22.0",
+                    "255.255.255.0", "99999999-1234-abcd-abcd-123456789000", "00:88:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5B", "VMInterface1", "VM2", "10.117.22.0",
+                    "255.255.255.0", "00000000-1234-abcd-abcd-123456789000", "00:99:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6A", "VMInterface1",
-                "VM1", "10.117.23.0", "255.255.255.0", "11112222-1234-abcd-abcd-123456789000", "00:12:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6B", "VMInterface2",
-                "VM2", "10.117.23.0", "255.255.255.0", "33334444-1234-abcd-abcd-123456789000", "00:34:22:33:44:55"));
-		}
-	};
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6A", "VMInterface1", "VM1", "10.117.23.0",
+                    "255.255.255.0", "11112222-1234-abcd-abcd-123456789000", "00:12:22:33:44:55"));
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6B", "VMInterface2", "VM2", "10.117.23.0",
+                    "255.255.255.0", "33334444-1234-abcd-abcd-123456789000", "00:34:22:33:44:55"));
+        }
+    };
 
-	private static final VSDSession session;
-	
-	public class VMDescriptor {
+    private static final VSDSession session;
+
+    public class VMDescriptor {
         public String domainName;
         public String templateName;
         public String zoneName;
-		public String subnetName;
-		public String vPortName;
-		public String vmInterfaceName;
-		public String vmName;
-		public String subnetAddress;
-		public String subnetNetmask;
-		public String vmUUID;
-		public String vmMAC;
-		
-		VMDescriptor(String domainName, String templateName, String zoneName, String subnetName, String vPortName, String vmInterfaceName,
-		                                String vmName, String subnetAddress, String subnetNetmask, String vmUUID, String vmMAC) {
+        public String subnetName;
+        public String vPortName;
+        public String vmInterfaceName;
+        public String vmName;
+        public String subnetAddress;
+        public String subnetNetmask;
+        public String vmUUID;
+        public String vmMAC;
+
+        VMDescriptor(String domainName, String templateName, String zoneName, String subnetName, String vPortName, String vmInterfaceName,
+                String vmName, String subnetAddress, String subnetNetmask, String vmUUID, String vmMAC) {
             this.domainName = domainName;
             this.templateName = templateName;
             this.zoneName = zoneName;
-			this.subnetName = subnetName;
-			this.vPortName = vPortName;
-			this.vmInterfaceName = vmInterfaceName;
-			this.vmName = vmName;
-			this.subnetAddress = subnetAddress;
-			this.subnetNetmask = subnetNetmask;
-			this.vmUUID = vmUUID;
-			this.vmMAC = vmMAC;
-		}
-	}
+            this.subnetName = subnetName;
+            this.vPortName = vPortName;
+            this.vmInterfaceName = vmInterfaceName;
+            this.vmName = vmName;
+            this.subnetAddress = subnetAddress;
+            this.subnetNetmask = subnetNetmask;
+            this.vmUUID = vmUUID;
+            this.vmMAC = vmMAC;
+        }
+    }
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException {
+    public static void main(String[] args) throws RestException {
         System.out.println("Performing Generic Network Provisioning for Enterprise " + MY_ENTERPRISE_NAME);
-		session.start();
-		GenericNetworkProvisioning instance = new GenericNetworkProvisioning();
+        session.start();
+        GenericNetworkProvisioning instance = new GenericNetworkProvisioning();
         Enterprise enterprise = instance.fetchEnterpriseByName(MY_ENTERPRISE_NAME);
         if (enterprise != null) {
             instance.createInventory(enterprise);
         } else {
             System.out.println("Provisioning operation not performed");
         }
-	}
-	
-	private void createInventory(Enterprise enterprise) throws RestException {
-		for (VMDescriptor vmDescriptor : this.vmInventoryList)  {
-		    this.populateNetworkObjects(enterprise, vmDescriptor);
-		}
-	}
+    }
 
-	private VM populateNetworkObjects(Enterprise enterprise, VMDescriptor vmDescriptor) throws RestException {
+    private void createInventory(Enterprise enterprise) throws RestException {
+        for (VMDescriptor vmDescriptor : this.vmInventoryList) {
+            this.populateNetworkObjects(enterprise, vmDescriptor);
+        }
+    }
+
+    private VM populateNetworkObjects(Enterprise enterprise, VMDescriptor vmDescriptor) throws RestException {
         DomainTemplate template = this.createLevel3DomainTemplateInEnterprise(enterprise, vmDescriptor);
         Domain l3Domain = this.createLevel3DomainForEnterprise(template, enterprise, vmDescriptor);
-		Zone zone = this.createZoneForLevel3Domain(l3Domain, vmDescriptor);
-		Subnet subnet = this.createSubnetForZone(zone, vmDescriptor);
-		VPort vPort = this.createVPortForSubnet(subnet, vmDescriptor);
-		VM vm = this.createVMForVPort(vPort, vmDescriptor);
-		return vm;
-	}
+        Zone zone = this.createZoneForLevel3Domain(l3Domain, vmDescriptor);
+        Subnet subnet = this.createSubnetForZone(zone, vmDescriptor);
+        VPort vPort = this.createVPortForSubnet(subnet, vmDescriptor);
+        VM vm = this.createVMForVPort(vPort, vmDescriptor);
+        return vm;
+    }
 
     private DomainTemplate createLevel3DomainTemplateInEnterprise(Enterprise enterprise, VMDescriptor vmDescriptor) throws RestException {
         DomainTemplate domainTemplate = this.fetchLevel3DomainTemplateByNameForEnterprise(vmDescriptor.templateName, enterprise);
-        if (domainTemplate ==  null) {
+        if (domainTemplate == null) {
             domainTemplate = new DomainTemplate();
             domainTemplate.setName(vmDescriptor.templateName);
             System.out.println("Creating Level 3 Domain Template " + domainTemplate.getName());
@@ -141,7 +141,8 @@ public class GenericNetworkProvisioning {
         return domainTemplate;
     }
 
-    private Domain createLevel3DomainForEnterprise(DomainTemplate domainTemplate, Enterprise enterprise, VMDescriptor vmDescriptor) throws RestException {
+    private Domain createLevel3DomainForEnterprise(DomainTemplate domainTemplate, Enterprise enterprise, VMDescriptor vmDescriptor)
+            throws RestException {
         Domain domain = this.fetchLevel3DomainByNameForEnterprise(vmDescriptor.domainName, enterprise);
         if (domain == null) {
             domain = new Domain();
@@ -153,65 +154,65 @@ public class GenericNetworkProvisioning {
         return domain;
     }
 
-	private Zone createZoneForLevel3Domain(Domain l3Domain, VMDescriptor vmDescriptor) throws RestException {
+    private Zone createZoneForLevel3Domain(Domain l3Domain, VMDescriptor vmDescriptor) throws RestException {
         Zone zone = this.fetchZoneByNameForL3Domain(vmDescriptor.zoneName, l3Domain);
-		if (zone == null) {
-			zone = new Zone();
-			zone.setName(vmDescriptor.zoneName);
-			l3Domain.createChild(zone);
-			System.out.println("Creating Zone " + zone.getName());
-		}
-		return zone;
-	}
+        if (zone == null) {
+            zone = new Zone();
+            zone.setName(vmDescriptor.zoneName);
+            l3Domain.createChild(zone);
+            System.out.println("Creating Zone " + zone.getName());
+        }
+        return zone;
+    }
 
-	private Subnet createSubnetForZone(Zone zone, VMDescriptor vmDescriptor) throws RestException {
+    private Subnet createSubnetForZone(Zone zone, VMDescriptor vmDescriptor) throws RestException {
         Subnet subnet = this.fetchSubnetByNameForZone(vmDescriptor.subnetName, zone);
-		if (subnet == null) {
-			subnet = new Subnet();
-			subnet.setName(vmDescriptor.subnetName);
-			subnet.setAddress(vmDescriptor.subnetAddress);
-			subnet.setNetmask(vmDescriptor.subnetNetmask);
-			System.out.println("Creating Subnet " + subnet.getName());
-			zone.createChild(subnet);
-		}
-		return subnet;
-	}
+        if (subnet == null) {
+            subnet = new Subnet();
+            subnet.setName(vmDescriptor.subnetName);
+            subnet.setAddress(vmDescriptor.subnetAddress);
+            subnet.setNetmask(vmDescriptor.subnetNetmask);
+            System.out.println("Creating Subnet " + subnet.getName());
+            zone.createChild(subnet);
+        }
+        return subnet;
+    }
 
-	private VPort createVPortForSubnet(Subnet subnet, VMDescriptor vmDescriptor) throws RestException {
-	    VPort vPort = this.fetchVPortByNameForSubnet(vmDescriptor.vPortName, subnet);
-	    if (vPort == null) {
-	        vPort = new VPort();
-	        vPort.setName(vmDescriptor.vPortName);
-	        vPort.setType(VPort.Type.VM);
-	        vPort.setAddressSpoofing(AddressSpoofing.INHERITED);
-	        vPort.setMulticast(Multicast.INHERITED);
-	        System.out.println("Creating Vport " + vPort.getName());
-	        subnet.createChild(vPort);
-	    }
-		return vPort;
-	}
+    private VPort createVPortForSubnet(Subnet subnet, VMDescriptor vmDescriptor) throws RestException {
+        VPort vPort = this.fetchVPortByNameForSubnet(vmDescriptor.vPortName, subnet);
+        if (vPort == null) {
+            vPort = new VPort();
+            vPort.setName(vmDescriptor.vPortName);
+            vPort.setType(VPort.Type.VM);
+            vPort.setAddressSpoofing(AddressSpoofing.INHERITED);
+            vPort.setMulticast(Multicast.INHERITED);
+            System.out.println("Creating Vport " + vPort.getName());
+            subnet.createChild(vPort);
+        }
+        return vPort;
+    }
 
-	private VM createVMForVPort(VPort vPort, VMDescriptor vmDescriptor) throws RestException {
-	    VM vm = this.fetchVMByUUIDForVPort(vmDescriptor.vmUUID, vPort);
-	    if (vm == null) {
-	        vm = new VM();
-	        vm.setName(vmDescriptor.vmName);
-	        vm.setUUID(vmDescriptor.vmUUID);
-	        List<VMInterface> vmInterfaces = new ArrayList<>();
-	        VMInterface vmInterface = new VMInterface();
-	        vmInterface.setName(vmDescriptor.vmInterfaceName);
-	        vmInterface.setMAC(vmDescriptor.vmMAC);
-	        vmInterface.setVPortID(vPort.getId());
-	        vmInterfaces.add(vmInterface);
-	        vm.setInterfaces(vmInterfaces);
-	        System.out.println("Creating VM " + vm.getName());
-	        Me me = session.getMe();
-	        me.createChild(vm);
-	    }
-		return vm;
-	}
+    private VM createVMForVPort(VPort vPort, VMDescriptor vmDescriptor) throws RestException {
+        VM vm = this.fetchVMByUUIDForVPort(vmDescriptor.vmUUID, vPort);
+        if (vm == null) {
+            vm = new VM();
+            vm.setName(vmDescriptor.vmName);
+            vm.setUUID(vmDescriptor.vmUUID);
+            List<VMInterface> vmInterfaces = new ArrayList<>();
+            VMInterface vmInterface = new VMInterface();
+            vmInterface.setName(vmDescriptor.vmInterfaceName);
+            vmInterface.setMAC(vmDescriptor.vmMAC);
+            vmInterface.setVPortID(vPort.getId());
+            vmInterfaces.add(vmInterface);
+            vm.setInterfaces(vmInterfaces);
+            System.out.println("Creating VM " + vm.getName());
+            Me me = session.getMe();
+            me.createChild(vm);
+        }
+        return vm;
+    }
 
-	private Domain fetchLevel3DomainByNameForEnterprise(String domainName, Enterprise enterprise) throws RestException {
+    private Domain fetchLevel3DomainByNameForEnterprise(String domainName, Enterprise enterprise) throws RestException {
         String filter = String.format("name == '%s'", domainName);
         DomainsFetcher fetcher = enterprise.getDomains();
         Domain l3Domain = fetcher.getFirst(filter, null, null, null, null, null, true);

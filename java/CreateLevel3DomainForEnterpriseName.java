@@ -16,15 +16,15 @@ import net.nuagenetworks.vspk.v5_0.fetchers.EnterprisesFetcher;
  * Precondition - requires an existing Level 3 Domain Template matching MY_L3_TEMPLATE_NAME
  */
 public class CreateLevel3DomainForEnterpriseName {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
-	private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
-	private static final String MY_L3_TEMPLATE_NAME = "MyLittleLevel3DomainTemplate";
-	private static final String MY_L3_DOMAIN_NAME = "MyLittleLevel3Domain";
-	private static final VSDSession session;
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
+    private static final String MY_L3_TEMPLATE_NAME = "MyLittleLevel3DomainTemplate";
+    private static final String MY_L3_DOMAIN_NAME = "MyLittleLevel3Domain";
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
     public static void main(String[] args) throws RestException {
         System.out.println("Creating Level 3 Domain : " + MY_L3_DOMAIN_NAME + " in Enterprise " + MY_ENTERPRISE_NAME);

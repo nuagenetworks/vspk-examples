@@ -16,15 +16,15 @@ import net.nuagenetworks.vspk.v5_0.fetchers.EnterprisesFetcher;
  * Precondition - requires an existing Level 2 Domain Template matching MY_L2_TEMPLATE_NAME
  */
 public class CreateLevel2DomainForEnterpriseName {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
-	private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
-	private static final String MY_L2_TEMPLATE_NAME = "MyLittleLevel2DomainTemplate";
-	private static final String MY_L2_DOMAIN_NAME = "MyLittleLevel2Domain";
-	private static final VSDSession session;
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
+    private static final String MY_L2_TEMPLATE_NAME = "MyLittleLevel2DomainTemplate";
+    private static final String MY_L2_DOMAIN_NAME = "MyLittleLevel2Domain";
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
     public static void main(String[] args) throws RestException {
         System.out.println("Creating Level 2 Domain : " + MY_L2_DOMAIN_NAME + " in Enterprise " + MY_ENTERPRISE_NAME);
@@ -35,7 +35,7 @@ public class CreateLevel2DomainForEnterpriseName {
             L2DomainTemplate template = instance.fetchLevel2DomainTemplateByNameForEnterprise(MY_L2_TEMPLATE_NAME, enterprise);
             if (template != null) {
                 instance.createLevel2DomainInEnterprise(template, MY_L2_DOMAIN_NAME, enterprise);
-           } else {
+            } else {
                 System.out.println("Operation not performed due to missing L2 Domain Template " + MY_L2_TEMPLATE_NAME);
             }
         } else {

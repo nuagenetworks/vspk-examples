@@ -17,7 +17,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  */
 public class CreateSubnetForZoneNameOfDomainId {
     private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
-    private static final String MY_L3_DOMAIN_ID = "6d3a382a-381c-4247-a16e-74e0c23aede8"; 
+    private static final String MY_L3_DOMAIN_ID = "6d3a382a-381c-4247-a16e-74e0c23aede8";
     private static final String MY_ZONE_NAME = "MyLittleZone2";
     private static final String MY_SUBNET_NAME = "MyLittleSubnet2";
     private static final String MY_SUBNET_ADDRESS = "10.117.19.0";
@@ -45,7 +45,7 @@ public class CreateSubnetForZoneNameOfDomainId {
         session.start();
         CreateSubnetForZoneNameOfDomainId instance = new CreateSubnetForZoneNameOfDomainId();
         SubnetDescriptor subnetDescriptor = new SubnetDescriptor(MY_SUBNET_NAME, MY_SUBNET_ADDRESS, MY_SUBNET_NETMASK);
-        
+
         Domain domain = instance.fetchDomainById(MY_L3_DOMAIN_ID);
         if (domain != null) {
             Zone zone = instance.fetchZoneByNameForDomain(MY_ZONE_NAME, domain);
@@ -58,7 +58,7 @@ public class CreateSubnetForZoneNameOfDomainId {
             System.out.println("Operation not performed due to missing Level 3 Domain " + MY_L3_DOMAIN_ID);
         }
     }
-    
+
     private Subnet createSubnetForZone(SubnetDescriptor subnetDescriptor, Zone zone) throws RestException {
         Subnet subnet = this.fetchSubnetByNameForZone(subnetDescriptor.subnetName, zone);
         if (subnet == null) {

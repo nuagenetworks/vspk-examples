@@ -17,26 +17,27 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
 
 /**
  * Idempotently creates a Subnet, VPort, VMInterface, and VM object for a Zone, as would be typical steps during Split Activation
+ * 
  * Precondition - requires a running VSD server at port matching MY_VSD_SERVER_PORT
  * Precondition - requires an existing Zone matching MY_ZONE_ID
  */
 public class SplitActivationForZoneId {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
     private static final String MY_ZONE_ID = "75e99dea-8a05-4c57-92c3-2cb00c42415f";
     private static final String MY_SUBNET_NAME = "MyLittleSubnet1";
     private static final String MY_SUBNET_ADDRESS = "10.117.18.0";
     private static final String MY_SUBNET_NETMASK = "255.255.255.0";
-	private static final String MY_VPORT_NAME = "MySplitActivationVPort";
+    private static final String MY_VPORT_NAME = "MySplitActivationVPort";
     private static final String MY_VM_NAME = "MySplitActivationVM";
     private static final String MY_VM_UUID = "12345678-eeee-abcd-abcd-123456789012";
     private static final String MY_VM_INTERFACE_NAME = "MySplitActivationInterface";
     private static final String MY_VM_INTERFACE_MAC = "00:11:22:33:44:77";
     private static final String MY_VM_INTERFACE_IP = "10.117.18.5";
-	private static final VSDSession session;
+    private static final VSDSession session;
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
     public static class VmDescriptor {
         public String subnetName;
@@ -49,8 +50,8 @@ public class SplitActivationForZoneId {
         public String vmMAC;
         public String vmIP;
 
-        VmDescriptor(String subnetName, String subnetAddress, String subnetNetmask, String vportName,
-                        String vmUUID, String vmName, String vmInterfaceName, String vmMAC, String vmIP) {
+        VmDescriptor(String subnetName, String subnetAddress, String subnetNetmask, String vportName, String vmUUID, String vmName,
+                String vmInterfaceName, String vmMAC, String vmIP) {
             this.subnetName = subnetName;
             this.subnetAddress = subnetAddress;
             this.subnetNetmask = subnetNetmask;
@@ -63,13 +64,13 @@ public class SplitActivationForZoneId {
         }
     }
 
-	public static void main(String[] args) throws RestException {
-		System.out.println("Creating VM " + MY_VM_NAME + " in Zone " + MY_ZONE_ID);
-		session.start();
-		SplitActivationForZoneId instance = new SplitActivationForZoneId();
+    public static void main(String[] args) throws RestException {
+        System.out.println("Creating VM " + MY_VM_NAME + " in Zone " + MY_ZONE_ID);
+        session.start();
+        SplitActivationForZoneId instance = new SplitActivationForZoneId();
 
-		VmDescriptor vmDescriptor = new VmDescriptor(MY_SUBNET_NAME, MY_SUBNET_ADDRESS, MY_SUBNET_NETMASK, MY_VPORT_NAME, MY_VM_UUID,
-		        MY_VM_NAME, MY_VM_INTERFACE_NAME, MY_VM_INTERFACE_MAC, MY_VM_INTERFACE_IP);
+        VmDescriptor vmDescriptor = new VmDescriptor(MY_SUBNET_NAME, MY_SUBNET_ADDRESS, MY_SUBNET_NETMASK, MY_VPORT_NAME, MY_VM_UUID, MY_VM_NAME,
+                MY_VM_INTERFACE_NAME, MY_VM_INTERFACE_MAC, MY_VM_INTERFACE_IP);
 
         Zone zone = instance.fetchZoneById(MY_ZONE_ID);
         if (zone != null) {
@@ -79,7 +80,7 @@ public class SplitActivationForZoneId {
         } else {
             System.out.println("Operation not performed due to missing Zone " + MY_ZONE_ID);
         }
-	}
+    }
 
     private Subnet createSubnetForZone(VmDescriptor vmDescriptor, Zone zone) throws RestException {
         Subnet subnet = this.fetchSubnetByNameForZone(vmDescriptor.subnetName, zone);
@@ -113,7 +114,7 @@ public class SplitActivationForZoneId {
         }
         return vport;
     }
-    
+
     private VM createVMForVPort(VPort vPort, VmDescriptor vmDescriptor) throws RestException {
         VM vm = this.fetchVMByUUIDForVPort(vmDescriptor.vmUUID, vPort);
         if (vm == null) {

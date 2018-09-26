@@ -18,7 +18,8 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
 import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
 
 /**
- * For each existing Enterprise, fetch its associated Level 3 Domains, Zones, Subnets, VPorts and VMs.  Output collected data in CSV format.
+ * For each existing Enterprise, fetch its associated Level 3 Domains, Zones, Subnets, VPorts and VMs. Output collected data in CSV format.
+ * 
  * Precondition - requires a running VSD server at port matching MY_VSD_SERVER_PORT
  * Precondition - requires 0 or more existing Enterprises
  * Precondition - requires 0 or more existing Level 3 Domains
@@ -28,72 +29,72 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class ListAllEnterprisesAndTheirAssociatesAsCSV {
-	private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
-	private static final VSDSession session;
-	
-	public class InventoryItem implements Cloneable {
-		public int enterpriseNumber;
-		public String enterpriseName;
-		public int domainNumber;
-		public String domainName;
-		public String domainDescription;
-		public int zoneNumber;
-		public String zoneName;
-		public int subnetNumber;
-		public String subnetName;
-		public String subnetAddress;
-		public String subnetNetmask;
-		public int vPortNumber;
-		public String vPortName;
-		public int vmNumber;
-		public String vmName;
-		public String vmUUID;
+    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final VSDSession session;
+
+    public class InventoryItem implements Cloneable {
+        public int enterpriseNumber;
+        public String enterpriseName;
+        public int domainNumber;
+        public String domainName;
+        public String domainDescription;
+        public int zoneNumber;
+        public String zoneName;
+        public int subnetNumber;
+        public String subnetName;
+        public String subnetAddress;
+        public String subnetNetmask;
+        public int vPortNumber;
+        public String vPortName;
+        public int vmNumber;
+        public String vmName;
+        public String vmUUID;
         public int vmInterfaceNumber;
         public String vmInterfaceName;
         public String vmInterfaceMAC;
 
-	    @Override
-	    protected Object clone() throws CloneNotSupportedException {
-	        return super.clone();
-	    }
-	}
+        @Override
+        protected Object clone() throws CloneNotSupportedException {
+            return super.clone();
+        }
+    }
 
-	static {
-		session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
-	}
+    static {
+        session = new VSDSession("csproot", "csproot", "csp", MY_VSD_SERVER_PORT);
+    }
 
-	public static void main(String[] args) throws RestException, CloneNotSupportedException {
-		System.out.println("Listing all Enterprises and their associated network objects");
-		session.start();
-		ListAllEnterprisesAndTheirAssociatesAsCSV instance = new ListAllEnterprisesAndTheirAssociatesAsCSV();
+    public static void main(String[] args) throws RestException, CloneNotSupportedException {
+        System.out.println("Listing all Enterprises and their associated network objects");
+        session.start();
+        ListAllEnterprisesAndTheirAssociatesAsCSV instance = new ListAllEnterprisesAndTheirAssociatesAsCSV();
         List<Enterprise> enterprises = instance.gatherAllEnterpriseObjects();
         List<InventoryItem> inventoryItems = instance.buildInventory(enterprises);
         instance.dumpInventoryAsCSV(inventoryItems);
 
-	}
+    }
 
-	private List<Enterprise> gatherAllEnterpriseObjects() throws RestException {
-		EnterprisesFetcher fetcher = session.getMe().getEnterprises();
-		List<Enterprise> enterprises = fetcher.get();
-		return enterprises;
-	}
+    private List<Enterprise> gatherAllEnterpriseObjects() throws RestException {
+        EnterprisesFetcher fetcher = session.getMe().getEnterprises();
+        List<Enterprise> enterprises = fetcher.get();
+        return enterprises;
+    }
 
-	private void dumpInventoryAsCSV(List<InventoryItem> inventoryItems) {
+    private void dumpInventoryAsCSV(List<InventoryItem> inventoryItems) {
         System.out.println("\nNumber of Inventory Items found : " + inventoryItems.size());
-        System.out.println("Record Number,Enterprise Number,Enterprise Name,Domain Number,Domain Name,Domain Description,Zone Number,Zone Name," +
-                "Subnet Number,Subnet Name,Subnet Address,Subnet Netmask,VPort Number,VPort Name," +
-                "VM Number,VM Name,VM UUID,VM Interface Number,VM Interface Name,VM Interface MAC");
+        System.out.println("Record Number,Enterprise Number,Enterprise Name,Domain Number,Domain Name,Domain Description,Zone Number,Zone Name,"
+                + "Subnet Number,Subnet Name,Subnet Address,Subnet Netmask,VPort Number,VPort Name,"
+                + "VM Number,VM Name,VM UUID,VM Interface Number,VM Interface Name,VM Interface MAC");
         int ctr = 0;
         for (InventoryItem item : inventoryItems) {
-            System.out.println(++ctr + "," + item.enterpriseNumber + ",'" + item.enterpriseName + "'," + item.domainNumber + ",'" +
-                    item.domainName + "','" + item.domainDescription + "'," + item.zoneNumber + ",'" + item.zoneName + "'," +
-                    item.subnetNumber + ",'" + item.subnetName + "','" + item.subnetAddress + "','" + item.subnetNetmask + "'" +
-                    item.vPortNumber + ",'" + item.vPortName + "'," + item.vmNumber + ",'" + item.vmName + "','" + item.vmUUID + "'," + 
-                    item.vmInterfaceNumber + ",'" + item.vmInterfaceName + "','" + item.vmInterfaceMAC + "'");
+            System.out.println(++ctr + "," + item.enterpriseNumber + ",'" + item.enterpriseName + "'," + item.domainNumber + ",'" + item.domainName
+                    + "','" + item.domainDescription + "'," + item.zoneNumber + ",'" + item.zoneName + "'," + item.subnetNumber + ",'"
+                    + item.subnetName + "','" + item.subnetAddress + "','" + item.subnetNetmask + "'" + item.vPortNumber + ",'" + item.vPortName
+                    + "'," + item.vmNumber + ",'" + item.vmName + "','" + item.vmUUID + "'," + item.vmInterfaceNumber + ",'" + item.vmInterfaceName
+                    + "','" + item.vmInterfaceMAC + "'");
         }
-	}
-	
-	private List<InventoryItem> buildInventory(List<Enterprise> enterprises) throws CloneNotSupportedException, RestException {
+    }
+
+    private List<InventoryItem> buildInventory(List<Enterprise> enterprises) throws CloneNotSupportedException, RestException {
         List<InventoryItem> inventoryItems = new ArrayList<>();
         for (int i = 0; i < enterprises.size(); i++) {
             Enterprise enterprise = enterprises.get(i);
@@ -101,13 +102,14 @@ public class ListAllEnterprisesAndTheirAssociatesAsCSV {
             item.enterpriseNumber = i + 1;
             item.enterpriseName = enterprise.getName();
             inventoryItems.add(item);
-            
+
             this.addDomainsForEnterpriseToInventory(enterprise, item, inventoryItems);
         }
         return inventoryItems;
-	}
+    }
 
-    private void addDomainsForEnterpriseToInventory(Enterprise enterprise, InventoryItem currentItem, List<InventoryItem> inventoryItems) throws CloneNotSupportedException, RestException {
+    private void addDomainsForEnterpriseToInventory(Enterprise enterprise, InventoryItem currentItem, List<InventoryItem> inventoryItems)
+            throws CloneNotSupportedException, RestException {
         DomainsFetcher fetcher = enterprise.getDomains();
         List<Domain> domains = fetcher.get();
         InventoryItem item;
@@ -127,7 +129,8 @@ public class ListAllEnterprisesAndTheirAssociatesAsCSV {
         }
     }
 
-    private void addZonesForDomainToInventory(Domain domain, InventoryItem currentItem, List<InventoryItem> inventoryItems) throws CloneNotSupportedException, RestException {
+    private void addZonesForDomainToInventory(Domain domain, InventoryItem currentItem, List<InventoryItem> inventoryItems)
+            throws CloneNotSupportedException, RestException {
         ZonesFetcher fetcher = domain.getZones();
         List<Zone> zones = fetcher.get();
         InventoryItem item;
@@ -145,8 +148,9 @@ public class ListAllEnterprisesAndTheirAssociatesAsCSV {
             this.addSubnetsForZoneToInventory(zone, item, inventoryItems);
         }
     }
-    
-    private void addSubnetsForZoneToInventory(Zone zone, InventoryItem currentItem, List<InventoryItem> inventoryItems) throws CloneNotSupportedException, RestException {
+
+    private void addSubnetsForZoneToInventory(Zone zone, InventoryItem currentItem, List<InventoryItem> inventoryItems)
+            throws CloneNotSupportedException, RestException {
         SubnetsFetcher fetcher = zone.getSubnets();
         List<Subnet> subnets = fetcher.get();
         InventoryItem item;
@@ -167,13 +171,14 @@ public class ListAllEnterprisesAndTheirAssociatesAsCSV {
         }
     }
 
-    private void addVPortsForSubnetToInventory(Subnet subnet, InventoryItem currentItem, List<InventoryItem> inventoryItems) throws CloneNotSupportedException, RestException {
+    private void addVPortsForSubnetToInventory(Subnet subnet, InventoryItem currentItem, List<InventoryItem> inventoryItems)
+            throws CloneNotSupportedException, RestException {
         VPortsFetcher fetcher = subnet.getVPorts();
         List<VPort> vPorts = fetcher.get();
         InventoryItem item;
 
         for (int i = 0; i < vPorts.size(); i++) {
-             if (i > 0) {
+            if (i > 0) {
                 item = (InventoryItem) currentItem.clone();
                 inventoryItems.add(item);
             } else {
@@ -186,7 +191,8 @@ public class ListAllEnterprisesAndTheirAssociatesAsCSV {
         }
     }
 
-    private void addVMsForVPortToInventory(VPort vPort, InventoryItem currentItem, List<InventoryItem> inventoryItems) throws CloneNotSupportedException, RestException {
+    private void addVMsForVPortToInventory(VPort vPort, InventoryItem currentItem, List<InventoryItem> inventoryItems)
+            throws CloneNotSupportedException, RestException {
         VMsFetcher fetcher = vPort.getVMs();
         List<VM> vms = fetcher.get();
         InventoryItem item;
@@ -204,9 +210,10 @@ public class ListAllEnterprisesAndTheirAssociatesAsCSV {
             item.vmUUID = vm.getUUID();
             this.addVMInterfacesForVMToInventory(vm, item, inventoryItems);
         }
-	}
+    }
 
-    private void addVMInterfacesForVMToInventory(VM vm, InventoryItem currentItem, List<InventoryItem> inventoryItems) throws CloneNotSupportedException {
+    private void addVMInterfacesForVMToInventory(VM vm, InventoryItem currentItem, List<InventoryItem> inventoryItems)
+            throws CloneNotSupportedException {
         List<VMInterface> list = vm.getInterfaces();
         InventoryItem item;
 
