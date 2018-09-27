@@ -30,39 +30,39 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires an existing Enterprise matching MY_ENTERPRISE_NAME
  */
 public class GenericNetworkProvisioning {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
 
     private List<VMDescriptor> vmInventoryList = new ArrayList<VMDescriptor>() {
         {
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1A", "VMInterface1", "VM1", "10.117.18.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1A", "VMInterface1", "VM1", "203.0.113.10",
                     "255.255.255.0", "11111111-1234-abcd-abcd-123456789000", "00:00:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1B", "VMInterface2", "VM2", "10.117.18.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet1", "VPort1B", "VMInterface2", "VM2", "203.0.113.10",
                     "255.255.255.0", "22222222-1234-abcd-abcd-123456789000", "00:11:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2A", "VMInterface2", "VM1", "10.117.19.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2A", "VMInterface2", "VM1", "203.0.113.20",
                     "255.255.255.0", "33333333-1234-abcd-abcd-123456789000", "00:22:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2B", "VMInterface1", "VM2", "10.117.19.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet2", "VPort2B", "VMInterface1", "VM2", "203.0.113.20",
                     "255.255.255.0", "44444444-1234-abcd-abcd-123456789000", "00:33:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3A", "VMInterface1", "VM1", "10.117.20.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3A", "VMInterface1", "VM1", "203.0.113.30",
                     "255.255.255.0", "55555555-1234-abcd-abcd-123456789000", "00:44:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3B", "VMInterface2", "VM2", "10.117.20.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone1", "Subnet3", "VPort3B", "VMInterface2", "VM2", "203.0.113.30",
                     "255.255.255.0", "66666666-1234-abcd-abcd-123456789000", "00:55:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4A", "VMInterface1", "VM1", "10.117.21.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4A", "VMInterface1", "VM1", "203.0.113.40",
                     "255.255.255.0", "77777777-1234-abcd-abcd-123456789000", "00:66:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4B", "VMInterface2", "VM2", "10.117.21.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet4", "VPort4B", "VMInterface2", "VM2", "203.0.113.40",
                     "255.255.255.0", "88888888-1234-abcd-abcd-123456789000", "00:77:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5A", "VMInterface2", "VM1", "10.117.22.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5A", "VMInterface2", "VM1", "203.0.113.50",
                     "255.255.255.0", "99999999-1234-abcd-abcd-123456789000", "00:88:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5B", "VMInterface1", "VM2", "10.117.22.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet5", "VPort5B", "VMInterface1", "VM2", "203.0.113.50",
                     "255.255.255.0", "00000000-1234-abcd-abcd-123456789000", "00:99:22:33:44:55"));
 
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6A", "VMInterface1", "VM1", "10.117.23.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6A", "VMInterface1", "VM1", "203.0.113.60",
                     "255.255.255.0", "11112222-1234-abcd-abcd-123456789000", "00:12:22:33:44:55"));
-            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6B", "VMInterface2", "VM2", "10.117.23.0",
+            add(new VMDescriptor("Little Domain1", "Little Template", "Zone2", "Subnet6", "VPort6B", "VMInterface2", "VM2", "203.0.113.60",
                     "255.255.255.0", "33334444-1234-abcd-abcd-123456789000", "00:34:22:33:44:55"));
         }
     };

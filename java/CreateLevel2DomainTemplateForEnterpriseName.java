@@ -13,7 +13,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.L2DomainTemplatesFetcher;
  * Precondition - requires an existing Enterprise matching MY_ENTERPRISE_NAME
  */
 public class CreateLevel2DomainTemplateForEnterpriseName {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
     private static final String MY_L2_TEMPLATE_NAME = "MyLittleLevel2DomainTemplate";
     private static final VSDSession session;

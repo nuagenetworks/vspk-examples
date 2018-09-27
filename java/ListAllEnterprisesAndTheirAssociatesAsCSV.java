@@ -29,7 +29,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class ListAllEnterprisesAndTheirAssociatesAsCSV {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final VSDSession session;
 
     public class InventoryItem implements Cloneable {

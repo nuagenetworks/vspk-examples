@@ -13,11 +13,11 @@ import net.nuagenetworks.vspk.v5_0.fetchers.EnterprisesFetcher;
 public class ConnectToVsdUsingCertificate {
 
     public static void main(String[] args) throws RestException {
-        String MY_VSD_SERVER_PORT = "https://135.228.4.108:7443";
+        String MY_VSD_SERVER_PORT = "https://192.0.2.10:7443";
         String username = "csproot";
         String organization = "csp";
-        File certFile = new File("C:/Users/lpaquett/keys/csproot.pem");
-        File keyFile = new File("C:/Users/lpaquett/keys/csproot-Key.pem");
+        File certFile = new File("C:/Users/username/keys/csproot.pem");
+        File keyFile = new File("C:/Users/username/keys/csproot-Key.pem");
 
         VSDSession session = new VSDSession(username, organization, MY_VSD_SERVER_PORT, certFile, keyFile);
         session.start();

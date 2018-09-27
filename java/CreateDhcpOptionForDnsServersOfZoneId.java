@@ -15,10 +15,10 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires an existing Zone matching MY_ZONE_ID
  */
 public class CreateDhcpOptionForDnsServersOfZoneId {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_DHCP_OPTION_FOR_DNS_AS_HEX = "06";
     private static final String MY_ZONE_ID = "a0f6e8e6-5d3d-4387-9472-392a072f6b9f";
-    private static final List<String> MY_DNS_SERVERS = new ArrayList<>(Arrays.asList("10.100.50.50", "10.100.60.60"));
+    private static final List<String> MY_DNS_SERVERS = new ArrayList<>(Arrays.asList("203.0.113.1", "203.0.113.2"));
     private static final VSDSession session;
 
     static {

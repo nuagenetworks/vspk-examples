@@ -13,7 +13,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires an existing Level 3 Domain matching MY_L3_DOMAIN_ID
  */
 public class CreateZoneForDomainId {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_L3_DOMAIN_ID = "6d3a382a-381c-4247-a16e-74e0c23aede8";
     private static final String MY_ZONE_NAME = "MyLittleZone1";
     private static final VSDSession session;

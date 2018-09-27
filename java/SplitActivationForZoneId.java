@@ -22,17 +22,17 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires an existing Zone matching MY_ZONE_ID
  */
 public class SplitActivationForZoneId {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_ZONE_ID = "75e99dea-8a05-4c57-92c3-2cb00c42415f";
     private static final String MY_SUBNET_NAME = "MyLittleSubnet1";
-    private static final String MY_SUBNET_ADDRESS = "10.117.18.0";
+    private static final String MY_SUBNET_ADDRESS = "203.0.113.0";
     private static final String MY_SUBNET_NETMASK = "255.255.255.0";
     private static final String MY_VPORT_NAME = "MySplitActivationVPort";
     private static final String MY_VM_NAME = "MySplitActivationVM";
     private static final String MY_VM_UUID = "12345678-eeee-abcd-abcd-123456789012";
     private static final String MY_VM_INTERFACE_NAME = "MySplitActivationInterface";
     private static final String MY_VM_INTERFACE_MAC = "00:11:22:33:44:77";
-    private static final String MY_VM_INTERFACE_IP = "10.117.18.5";
+    private static final String MY_VM_INTERFACE_IP = "203.0.113.5";
     private static final VSDSession session;
 
     static {

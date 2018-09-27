@@ -14,7 +14,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VCentersFetcher;
  * Precondition - requires an existing VCenter matching MY_VCENTER_NAME
  */
 public class DeleteVCenterAndItsAssociates {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_VCENTER_NAME = "MyLittleVCenter";
     private static final VSDSession session;
 

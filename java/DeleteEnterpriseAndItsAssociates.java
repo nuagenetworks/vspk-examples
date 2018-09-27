@@ -34,7 +34,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class DeleteEnterpriseAndItsAssociates {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_ENTERPRISE_NAME = "MyLittleEnterprise";
     private static final VSDSession session;
 

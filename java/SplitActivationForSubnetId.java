@@ -20,14 +20,14 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
  * Precondition - requires an existing Subnet matching MY_SUBNET_ID
  */
 public class SplitActivationForSubnetId {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_SUBNET_ID = "99142dd3-2980-40a6-8280-8ec0c0d2234d";
     private static final String MY_VPORT_NAME = "MySplitActivationVPort";
     private static final String MY_VM_NAME = "MySplitActivationVM";
     private static final String MY_VM_UUID = "12345678-eeee-abcd-abcd-123456789012";
     private static final String MY_VM_INTERFACE_NAME = "MySplitActivationInterface";
     private static final String MY_VM_INTERFACE_MAC = "00:11:22:33:44:77";
-    private static final String MY_VM_INTERFACE_IP = "10.117.18.5";
+    private static final String MY_VM_INTERFACE_IP = "203.0.113.20";
     private static final VSDSession session;
 
     static {

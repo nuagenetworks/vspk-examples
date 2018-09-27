@@ -15,10 +15,10 @@ import net.nuagenetworks.vspk.v5_0.fetchers.SubnetsFetcher;
  * Precondition - requires an existing Subnet matching MY_SUBNET_ID
  */
 public class CreateDhcpOptionForSmtpServersOfSubnetId {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_DHCP_OPTION_FOR_SMTP_AS_HEX = "45";
     private static final String MY_SUBNET_ID = "eb788945-d6f3-4fcf-af01-34e24395a0f4";
-    private static final List<String> MY_SMTPS = new ArrayList<>(Arrays.asList("10.100.10.10", "10.100.10.11", "10.100.10.12", "10.100.10.13"));
+    private static final List<String> MY_SMTPS = new ArrayList<>(Arrays.asList("203.0.113.10", "203.0.113.11", "203.0.113.12", "203.0.113.13"));
     private static final VSDSession session;
 
     static {
