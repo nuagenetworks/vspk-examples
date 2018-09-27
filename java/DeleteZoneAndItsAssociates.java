@@ -20,7 +20,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.ZonesFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class DeleteZoneAndItsAssociates {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_ZONE_ID = "db523956-4051-4c29-ba16-1f09f8eb3ca1";
     private static final VSDSession session;
 

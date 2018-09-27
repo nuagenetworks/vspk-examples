@@ -12,7 +12,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.EnterprisesFetcher;
 public class ConnectToVsdUsingPassword {
 
     public static void main(String[] args) throws RestException {
-        String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+        String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
         String username = "csproot";
         String password = "csproot";
         String organization = "csp";

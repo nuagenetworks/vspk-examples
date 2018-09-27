@@ -18,7 +18,7 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VPortsFetcher;
  * Precondition - requires 0 or more existing VMs
  */
 public class DeleteSubnetAndItsAssociates {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_SUBNET_ID = "e54e951d-8503-495d-9164-a3bb935fc9f1";
     private static final VSDSession session;
 

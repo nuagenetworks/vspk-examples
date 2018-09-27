@@ -11,12 +11,12 @@ import net.nuagenetworks.vspk.v5_0.fetchers.VCentersFetcher;
  * Precondition - requires a running VSD server at port matching MY_VSD_SERVER_PORT
  */
 public class CreateVCenter {
-    private static final String MY_VSD_SERVER_PORT = "https://135.228.4.108:8443";
+    private static final String MY_VSD_SERVER_PORT = "https://192.0.2.10:8443";
     private static final String MY_VCENTER_NAME = "MyLittleVCenter";
-    private static final String MY_VCENTER_IP = "135.122.118.25";
+    private static final String MY_VCENTER_IP = "203.0.113.200";
     private static final String MY_VCENTER_USER = "administrator@vsphere.local";
     private static final String MY_VCENTER_PASS = "MyLittlePassword";
-    private static final String MY_VCENTER_OVF = "http://135.122.116.212/customers/VRS_4.0.3-28.ovf";
+    private static final String MY_VCENTER_OVF = "http://203.0.113.212/customers/VRS_4.0.3-28.ovf";
     private static final VSDSession session;
 
     static {
