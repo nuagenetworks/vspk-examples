@@ -7,8 +7,8 @@
        api_username: csproot
        api_password: csproot
        api_enterprise: csp
-       api_url: https://10.167.42.51:8443
-       api_version: v5_0
+       api_url: https://localhost:8443
+       api_version: v6
     enterprise_name: Acme
     domain_name: ipv6
 
