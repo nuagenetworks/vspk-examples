@@ -15,6 +15,10 @@ http://github.com/nuagenetworks/vspk-examples/blob/master/docs/deploy_vsphere_te
 --- Author ---
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
+--- Version history ---
+2016-01-26 - 1.0
+2020-07-06 - 1.1 - Migrated to v6 API
+
 --- Examples ---
 ---- Deploy a template in a given Resource Pool and Folder, with given Nuage VM metadata and a fixed IP ----
 python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root -r Pool -f Folder --nuage-vm-enterprise VMware-Integration --nuage-vm-domain Main --nuage-vm-zone "Zone 1" --nuage-vm-subnet "Subnet 0" --nuage-vm-ip 10.0.0.123 --nuage-vm-user vmwadmin
@@ -22,6 +26,9 @@ python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp -
 ---- Deploy a template, for the Nuage VM metadata show menus to select values from ----
 python deploy_vsphere_template_with_nuage.py -n Test-02 --nuage-enterprise csp --nuage-host 10.167.43.64 --nuage-user csproot -S -t TestVM-Minimal-Template --vcenter-host 10.167.43.24 --vcenter-user root
 """
+from __future__ import print_function
+from builtins import str
+from builtins import input
 import argparse
 import atexit
 import getpass
@@ -31,9 +38,9 @@ import os.path
 import requests
 
 from time import sleep
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -196,16 +203,6 @@ def main():
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    ssl_context = None
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-        import ssl
-        if hasattr(ssl, 'SSLContext'):
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-            ssl_context.verify_mode = ssl.CERT_NONE
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -225,7 +222,7 @@ def main():
             logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
             nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
             nc.start()
-        except IOError, e:
+        except IOError:
             pass
 
         if not nc or not nc.is_current_session():
@@ -235,11 +232,11 @@ def main():
         # Connecting to vCenter
         try:
             logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_port, vcenter_username))
-            if ssl_context:
-                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port), sslContext=ssl_context)
+            if nosslcheck:
+                vc = SmartConnectNoSSL(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port))
             else:
                 vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port))
-        except IOError, e:
+        except IOError:
             pass
 
         if not vc:
@@ -269,7 +266,7 @@ def main():
                 index += 1
             vm_enterprise = None
             while vm_enterprise is None:
-                choice = raw_input('Please enter the number of the enterprise [1-%s]: ' % len(all_ent))
+                choice = eval(input('Please enter the number of the enterprise [1-%s]: ' % len(all_ent)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_ent):
                     vm_enterprise = all_ent[choice - 1]
@@ -296,7 +293,7 @@ def main():
                 index += 1
             vm_user = None
             while vm_user is None:
-                choice = raw_input('Please enter the number of the user [1-%s]: ' % len(all_users))
+                choice = eval(input('Please enter the number of the user [1-%s]: ' % len(all_users)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_users):
                     vm_user = all_users[choice - 1]
@@ -324,7 +321,7 @@ def main():
                 index += 1
             vm_domain = None
             while vm_domain is None:
-                choice = raw_input('Please enter the number of the domain [1-%s]: ' % len(all_dom))
+                choice = eval(input('Please enter the number of the domain [1-%s]: ' % len(all_dom)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_dom):
                     vm_domain = all_dom[choice - 1]
@@ -353,7 +350,7 @@ def main():
                 index += 1
             vm_zone = None
             while vm_zone is None:
-                choice = raw_input('Please enter the number of the zone [1-%s]: ' % len(all_zone))
+                choice = eval(input('Please enter the number of the zone [1-%s]: ' % len(all_zone)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_zone):
                     vm_zone = all_zone[choice - 1]
@@ -383,7 +380,7 @@ def main():
                 index += 1
             vm_subnet = None
             while vm_subnet is None:
-                choice = raw_input('Please enter the number of the subnet [1-%s]: ' % len(all_subnet))
+                choice = eval(input('Please enter the number of the subnet [1-%s]: ' % len(all_subnet)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_subnet):
                     vm_subnet = all_subnet[choice - 1]
@@ -408,7 +405,7 @@ def main():
             print('If you want a static IP, please enter it. Or press enter for a DHCP assigned IP.')
             vm_ip = None
             while vm_ip is None:
-                choice = raw_input('Please enter the IP or press enter for a DHCP assigned IP: ')
+                choice = eval(input('Please enter the IP or press enter for a DHCP assigned IP: '))
                 if not choice or ipaddress.ip_address(choice) in ipaddress.ip_network('%s/%s' % (vm_subnet.address, vm_subnet.netmask)):
                     vm_ip = choice
                     break
@@ -565,10 +562,10 @@ def main():
                     break
                 sleep(5)
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         logger.critical('Caught vmodl fault: %s' % e.msg)
         return 1
-    except Exception, e:
+    except Exception as e:
         logger.critical('Caught exception: %s' % str(e))
         return 1
 

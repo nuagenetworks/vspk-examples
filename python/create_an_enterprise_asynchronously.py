@@ -1,29 +1,26 @@
-import sys
+from __future__ import print_function
+from builtins import str
 import logging
 
-sys.path.append("./")
-
-from vspk.vsdk.v3_2 import *
-from vspk.vsdk.v3_2.utils import set_log_level
+from vspk import v6 as vsdk
+from vspk.utils import set_log_level
 
 set_log_level(logging.ERROR)
 
-
 # Callback method
-def mycallback(current_object, connection):
-    """ Your callback method
-
+def my_callback(current_object, connection):
+    """
+    Your callback method
     """
     # Do whatever you need to do here...
-    print str(current_object)
-    print str(connection)
-
+    print(str(current_object))
+    print(str(connection))
 
 # Create a session for CSPRoot
-session = NUVSDSession(username=u'csproot', password=u'csproot', enterprise=u'csp', api_url=u'https://135.227.222.46:8443')
+session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://localhost:8443')
 session.start()
 csproot = session.user
 
 # Create an enterprise asynchronously
-enterprise = NUEnterprise(name=u"Async Enterprise")
-csproot.create_child(enterprise, async=True, callback=mycallback)
+enterprise = vsdk.NUEnterprise(name='Async Enterprise')
+csproot.create_child(enterprise, as_async=True, callback=my_callback)

@@ -1,5 +1,9 @@
-from vspk.vsdk import v3_2 as vsdk
+from __future__ import print_function
+from builtins import next
+from builtins import range
 import ipaddress
+
+from vspk import v6 as vsdk
 
 
 def populate_test_domain(domain, number_of_zones, number_of_subnets_per_zone, number_of_vports_per_subnet):
@@ -33,9 +37,9 @@ def populate_test_domain(domain, number_of_zones, number_of_subnets_per_zone, nu
         for j in range(0, number_of_subnets_per_zone):
 
             # pull a subnet and get information about it
-            subnetwork = subnets.next()
+            subnetwork = next(subnets)
             ip = "%s" % subnetwork.network_address
-            gw = "%s" % subnetwork.hosts().next()
+            gw = "%s" % next(subnetwork.hosts())
             nm = "%s" % subnetwork.netmask
 
             subnet = subnet_class(name="Subnet %d %d" % (i, j), address=ip, netmask=nm, gateway=gw)
@@ -56,7 +60,7 @@ def populate_test_domain(domain, number_of_zones, number_of_subnets_per_zone, nu
 
 if __name__ == "__main__":
 
-    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.46:8443')
+    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://localhost:8443')
     session.start()
 
     # get a domain
@@ -67,7 +71,7 @@ if __name__ == "__main__":
     populate_test_domain(domain, 3, 4, 5)
 
     from time import sleep
-    print "Sleeping..."
+    print("Sleeping...")
     sleep(6)
     for zone in domain.zones:
         zone.delete()

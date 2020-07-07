@@ -1,8 +1,9 @@
 # -*- coding: utf8 -*-
+from __future__ import print_function
+from builtins import str
+import os 
 
-from vspk.vsdk.v3_1 import NUVSDSession as NUVSDSession_v3_1
-from vspk.vsdk.v3_2 import NUVSDSession as NUVSDSession_v3_2
-import os
+from vspk import v6 as vsdk
 
 
 def shell_variable(value_name):
@@ -10,7 +11,7 @@ def shell_variable(value_name):
     if value:
         return value
     else:
-        print "Please have %s specified when executing this program." % value_name
+        print("Please have {0:s} specified when executing this program.".format(value_name))
         exit(-1)
 
 
@@ -26,23 +27,15 @@ def itemize(item, name, description):
 
 
 def print_items(header, item_list, name=False, description=False):
-    print header
-    print '\n'.join(itemize(item, name, description) for item in item_list)
+    print(header)
+    print('\n'.join(itemize(item, name, description) for item in item_list))
 
 
-def inspect_topology(username, password, enterprise, api_url, api_version):
-    if api_version == "3.1":
-        session = NUVSDSession_v3_1(
-            username=username, password=password, enterprise=enterprise, api_url=api_url)
-    elif api_version == "3.2":
-        session = NUVSDSession_v3_2(
-            username=username, password=password, enterprise=enterprise, api_url=api_url)
-    else:
-        return
-
+def inspect_topology(username, password, enterprise, api_url):
+    session = vsdk.NUVSDSession(username=username, password=password, enterprise=enterprise, api_url=api_url)
     session.start()
     user = session.user
-    print "User:\n=====\nname: %s, role: %s" % (user.user_name, user.role)
+    print("User:\n=====\nname: {0:s}, role: {1:s}".format(user.user_name, user.role))
 
     print_items("\nEnterprises:\n============", user.enterprises.get(), name=True)
     print_items("\nDomains:\n========", user.domains.get(), name=True, description=True)
@@ -52,10 +45,8 @@ def inspect_topology(username, password, enterprise, api_url, api_version):
 if __name__ == "__main__":
 
     api_url     = shell_variable("VSD_API_URL")
-    api_version = shell_variable("VSD_API_VERSION")
     username    = shell_variable("VSD_USERNAME")
     password    = shell_variable("VSD_PASSWORD")
     enterprise  = shell_variable("VSD_ENTERPRISE")
 
-    inspect_topology(username=username, password=password, enterprise=enterprise,
-                     api_url=api_url, api_version=api_version)
+    inspect_topology(username=username, password=password, enterprise=enterprise, api_url=api_url)

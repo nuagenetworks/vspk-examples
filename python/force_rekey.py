@@ -11,16 +11,17 @@ python force_rekey.py
 --- Documentation ---
 https://github.com/nuagenetworks/vspk-examples/blob/master/python/force_rekey.md
 """
+from __future__ import print_function
 
 import time
 
-from vspk import v5_0 as vspk
+from vspk import v6 as vspk
 
 # Login variables
 n_username = 'csproot'
 n_password = 'csproot'
 n_org = 'csp'
-api_url = 'https://10.167.60.21:8443'
+api_url = 'https://localhost:8443'
 
 # script variables
 org_name = '521_CATS_FIXED'

@@ -8,6 +8,7 @@ Michael Kashin <michael.kashin@nokia.com>
 --- Version history ---
 2016-10-06 - 1.0 - First version
 2016-10-08 - 1.1 - Variable name changes and failure handling
+2020-07-06 - 1.2 - Migrate to v6 API
 
 --- Usage ---
 run 'python fip_to_gateway.py -h' for an overview
@@ -22,6 +23,8 @@ python fip_to_gateway.py -E csp -H 10.6.132.43 -p csproot -u csproot -S \
        --vsg 10.6.132.47 --port eth0 --vlan 205
 """
 
+from builtins import str
+from builtins import range
 import argparse
 import getpass
 import logging
@@ -44,7 +47,7 @@ def get_args():
     parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
     parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
     parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     parser.add_argument('--fip', required=True, help='FIP subnet CIDR', dest='fip_net')
     parser.add_argument('--address', required=True, help='Uplink network address', dest='uplink_addr')
@@ -77,7 +80,7 @@ def main():
     if args.nuage_password:
         nuage_password  = args.nuage_password
     nuage_username      = args.nuage_username
-    nosslcheck          = args.nosslcheck
+#    nosslcheck          = args.nosslcheck
     verbose             = args.verbose
     fip_net             = args.fip_net
     uplink_addr         = args.uplink_addr
@@ -100,11 +103,6 @@ def main():
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -116,7 +114,7 @@ def main():
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
 
-    except Exception, e:
+    except Exception as e:
         logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
         logger.critical('Caught exception: %s' % str(e))
         return 1

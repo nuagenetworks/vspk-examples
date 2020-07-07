@@ -11,7 +11,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2016-03-20 - 1.0
-2018-05-14 - 1.1 - Added support for flushing the NIC connection so the OS reinitiates its network stack (useful for clearing arp tables)
+2018-05-14 - 1.1 - Added support for flushing the NIC connection so the OS initiates its network stack (useful for clearing arp tables)
 
 --- Usage ---
 run 'python migrate_vmware_vm_to_nuage.py -h' for an overview
@@ -35,6 +35,7 @@ python migrate_vmware_vm_to_nuage.py --nuage-enterprise csp --nuage-host 10.189.
 ---- Migrate VM to layer 2 subnet in Nuage with split-activation ----
 python migrate_vmware_vm_to_nuage.py --nuage-enterprise csp --nuage-host 10.189.2.254 --nuage-user csproot --nuage-vm-user hradmin --nuage-vm-enterprise Finance --nuage-vm-subnet L2-Domain --vcenter-host vc01.fi.company.tld --vcenter-user administrator@vsphere.local --vcenter-port-group Nuage-VM-PG1 --vcenter-vm LEGACY-VM -S -m split-activation
 """
+from builtins import str
 import argparse
 import atexit
 import getpass
@@ -42,10 +43,9 @@ import ipaddress
 import logging
 import re
 from time import sleep
-import requests
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -98,7 +98,7 @@ def get_vcenter_object(logger, vc, vimtype, name):
 
 def get_nuage_object(logger, parent, nuagetype, search_query, single_entity=False):
     """
-    Get a Nuage opbject matching a search query
+    Get a Nuage object matching a search query
     """
     logger.debug('Finding Nuage entities for object matching search query "%s"' % search_query)
     if single_entity:
@@ -161,16 +161,6 @@ def main():
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    ssl_context = None
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-        import ssl
-        if hasattr(ssl, 'SSLContext'):
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-            ssl_context.verify_mode = ssl.CERT_NONE
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -197,11 +187,11 @@ def main():
         # Connecting to vCenter
         try:
             logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_port, vcenter_username))
-            if ssl_context:
-                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port), sslContext=ssl_context)
+            if nosslcheck:
+                vc = SmartConnectNoSSL(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port))
             else:
                 vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_port))
-        except IOError, e:
+        except IOError as e:
             pass
 
         if not vc:
@@ -286,14 +276,14 @@ def main():
 
         # Check if IP is in subnet
         logger.debug('Verifying that IP %s of VM %s is part of subnet %s' % (vc_vm_ip, vcenter_vm, nuage_vm_subnet))
-        if not ipaddress.ip_address(unicode(vc_vm_ip, 'utf-8')) in ipaddress.ip_network('%s/%s' % (nc_subnet.address, nc_subnet.netmask)):
+        if not ipaddress.ip_address(str(vc_vm_ip, 'utf-8')) in ipaddress.ip_network('%s/%s' % (nc_subnet.address, nc_subnet.netmask)):
             logger.critical('IP %s is not part of subnet %s with netmask %s' % (vc_vm_ip, nc_subnet.address, nc_subnet.netmask))
             return 1
 
         logger.info('Found UUID %s, MAC %s and IP %s for VM %s' % (vc_vm_uuid, vc_vm_mac, vc_vm_ip, vcenter_vm))
 
         # if metadata mode, create metadata on the VM
-        if mode.lower() == 'metadata':
+        if mode.lower() == 'metadata': 
             logger.debug('Setting the metadata on VM %s' % vcenter_vm)
             vm_option_values = []
             # Network type
@@ -437,12 +427,12 @@ def main():
                     break
                 sleep(1)
 
-        logger.info('Succesfully attached VM %s to Nuage subnet %s, in mode %s' % (vcenter_vm, nuage_vm_subnet, mode))
+        logger.info('Successfully attached VM %s to Nuage subnet %s, in mode %s' % (vcenter_vm, nuage_vm_subnet, mode))
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         logger.critical('Caught vmodl fault: %s' % e.msg)
         return 1
-    except Exception, e:
+    except Exception as e:
         logger.critical('Caught exception: %s' % str(e))
 
     return 0

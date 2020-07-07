@@ -9,6 +9,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2016-01-26 - 1.0
+2020-07-06 - 1.1 - Migrate to v6 API
 
 --- Usage ---
 run 'python gather_statistics.py -h' for an overview
@@ -32,18 +33,21 @@ python gather_statistics.py -e SUBNET -E csp -H 10.167.43.64 -P 443 -p csproot -
 ---- Gather BYTES_IN and BYTES_OUT statistics for the last hour on all VMs with tabled output ----
 python gather_statistics.py -e VM -E csp -H 10.167.43.64 -P 443 -p csproot -u csproot -S -s BYTES_IN -s BYTES_OUT
 """
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from past.utils import old_div
 import argparse
 import datetime
 import getpass
 import json
 import logging
 import re
-import requests
 import time
 
 from prettytable import PrettyTable
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 statistics_valid_types = [
     'BYTES_IN',
@@ -87,7 +91,7 @@ def get_args():
     parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
     parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
     parser.add_argument('-s', '--statistic-type', required=False, help='The type of statistics to gather. If not specified, all are used. Can be specified multiple times. Possible values are: BYTES_IN, BYTES_OUT, EGRESS_BYTE_COUNT, EGRESS_PACKET_COUNT, INGRESS_BYTE_COUNT, INGRESS_PACKET_COUNT, PACKETS_DROPPED_BY_RATE_LIMIT, PACKETS_IN, PACKETS_IN_DROPPED, PACKETS_IN_ERROR, PACKETS_OUT, PACKETS_OUT_DROPPED, PACKETS_OUT_ERROR', dest='statistic_types', type=str, choices=statistics_valid_types, action='append')
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-t', '--time', required=False, help='Indication of how far back in the past the statistics should go. Can be set in seconds, minutes (add m), hours (add h) or days (add d) (examples: 60, 60m, 60h or 60d, default is 3600 seconds)', dest='time_difference', type=str, default='3600')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
@@ -120,7 +124,7 @@ def main():
     statistic_types     = statistics_valid_types
     if args.statistic_types:
         statistic_types = args.statistic_types
-    nosslcheck          = args.nosslcheck
+#    nosslcheck          = args.nosslcheck
     time_difference     = args.time_difference
     verbose             = args.verbose
 
@@ -155,11 +159,6 @@ def main():
 
     logger.debug('Time difference set to %s seconds' % time_diff)
 
-    # Disabling SSL verification if set
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -171,7 +170,7 @@ def main():
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
 
-    except Exception, e:
+    except Exception as e:
         logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
         logger.critical('Caught exception: %s' % str(e))
         return 1
@@ -235,7 +234,7 @@ def main():
                 entity_data_freq = entity_stat_policies[0].data_collection_frequency
             logger.debug('Data collection frequency for %s %s saved as %s' % (output_type, entity.name, entity_data_freq))
 
-        num_data_points = int(time_diff / entity_data_freq)
+        num_data_points = int(old_div(time_diff, entity_data_freq))
 
         # Collecting statistics
         logger.debug('Collecting %s datapoints of statistics %s on %s %s from timestamp %s to timestamp %s' % (num_data_points, stat_metric_types_str, output_type, entity.name, stat_start_time, stat_end_time))
@@ -278,9 +277,9 @@ def main():
 
     logger.debug('Printing output')
     if json_output:
-        print json.dumps(json_object, sort_keys=True, indent=4)
+        print(json.dumps(json_object, sort_keys=True, indent=4))
     else:
-        print pt.get_string()
+        print(pt.get_string())
 
     return 0
 

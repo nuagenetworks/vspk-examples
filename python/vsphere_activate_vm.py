@@ -7,6 +7,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2017-03-26 - 1.0
+2020-07-06 - 1.1 - Migrate to v6 API
 
 --- Usage ---
 run 'python vsphere_activate_vm.py -h' for an overview
@@ -14,7 +15,7 @@ run 'python vsphere_activate_vm.py -h' for an overview
 --- Config file structure ----
 [NUAGE]
 # VSD API server
-vsd_api_url = https://10.189.1.254:8443
+vsd_api_url = https://localhost:8443
 
 # VSD API user
 vsd_api_user = csproot
@@ -55,19 +56,23 @@ file = vsphere_activate_vm.log
 level = WARNING
 
 """
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import input
 import argparse
 import atexit
-import ConfigParser
+import configparser
 import ipaddress
 import logging
 import os
-import requests
 import sys
 
 from time import sleep
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -104,38 +109,34 @@ def parse_config(config_file):
     """
     Parses configuration file
     """
-    cfg = ConfigParser.ConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(config_file)
 
     # Checking the sections of the config file
     if not cfg.has_section('VSPHERE') or \
             not cfg.has_section('NUAGE') or \
             not cfg.has_section('LOG'):
-        print 'Missing section in the configuration file {0:s}, please check the documentation'.format(
-            config_file)
+        print('Missing section in the configuration file {0:s}, please check the documentation'.format(config_file))
         sys.exit(1)
     # Checking the NUAGE options
     if not cfg.has_option('NUAGE', 'vsd_api_url') or \
             not cfg.has_option('NUAGE', 'vsd_api_user') or \
             not cfg.has_option('NUAGE', 'vsd_api_password') or \
             not cfg.has_option('NUAGE', 'vsd_api_enterprise'):
-        print 'Missing options in the NUAGE section of configuration file {0:s}, please check the documentation'.format(
-            config_file)
+        print('Missing options in the NUAGE section of configuration file {0:s}, please check the documentation'.format(config_file))
         sys.exit(1)
     # Checking the VSPHERE options
     if not cfg.has_option('VSPHERE', 'vsphere_api_host') or \
             not cfg.has_option('VSPHERE', 'vsphere_api_user') or \
             not cfg.has_option('VSPHERE', 'vsphere_api_password') or \
             not cfg.has_option('VSPHERE', 'vsphere_api_port'):
-        print 'Missing options in the VSPHERE section of configuration file {0:s}, please check the documentation'.format(
-            config_file)
+        print('Missing options in the VSPHERE section of configuration file {0:s}, please check the documentation'.format(config_file))
         sys.exit(1)
     # Checking the LOG options
     if not cfg.has_option('LOG', 'directory') or \
             not cfg.has_option('LOG', 'file') or \
             not cfg.has_option('LOG', 'level'):
-        print 'Missing options in the LOG section of configuration file {0:s}, please check the documentation'.format(
-            config_file)
+        print('Missing options in the LOG section of configuration file {0:s}, please check the documentation'.format(config_file))
         sys.exit(1)
 
     return cfg
@@ -175,7 +176,7 @@ def main():
     elif os.path.isfile('{0:s}/.nuage/config.ini'.format(os.path.expanduser('~'))):
         cfg = parse_config('{0:s}/.nuage/config.ini'.format(os.path.expanduser('~')))
     else:
-        print 'Missing config file'
+        print('Missing config file')
         return 1
 
     mode = args.mode
@@ -223,10 +224,6 @@ def main():
     logging.basicConfig(filename=log_path, format='%(asctime)s %(levelname)s - %(name)s - %(message)s', level=log_level)
     logging.info('Logging initiated')
 
-    # Disabling SSL verification if set
-    logging.debug('Disabling SSL certificate verification.')
-    requests.packages.urllib3.disable_warnings()
-
     try:
         vc = None
         nc = None
@@ -256,7 +253,7 @@ def main():
             logging.info(
                 'Connecting to vCenter server {0:s} with username {1:s}'.format(cfg.get('VSPHERE', 'vsphere_api_host'),
                                                                                 cfg.get('VSPHERE', 'vsphere_api_user')))
-            vc = SmartConnect(host=cfg.get('VSPHERE', 'vsphere_api_host'), user=cfg.get('VSPHERE', 'vsphere_api_user'),
+            vc = SmartConnectNoSSL(host=cfg.get('VSPHERE', 'vsphere_api_host'), user=cfg.get('VSPHERE', 'vsphere_api_user'),
                               pwd=cfg.get('VSPHERE', 'vsphere_api_password'),
                               port=int(cfg.get('VSPHERE', 'vsphere_api_port')))
         except IOError:
@@ -300,7 +297,7 @@ def main():
                 print('%s. %s' % (index + 1, cur_vm.name))
                 index += 1
             while vcenter_vm is None:
-                choice = raw_input('Please enter the number of the VM [1-%s]: ' % len(vm_list))
+                choice = eval(input('Please enter the number of the VM [1-%s]: ' % len(vm_list)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(vm_list):
                     vcenter_vm = vm_list[choice - 1]
@@ -326,7 +323,7 @@ def main():
                 print('%s. %s' % (index + 1, cur_ent.name))
                 index += 1
             while vm_enterprise is None:
-                choice = raw_input('Please enter the number of the enterprise [1-%s]: ' % len(all_ent))
+                choice = eval(input('Please enter the number of the enterprise [1-%s]: ' % len(all_ent)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_ent):
                     vm_enterprise = all_ent[choice - 1]
@@ -353,7 +350,7 @@ def main():
                 print('%s. %s' % (index + 1, cur_user.user_name))
                 index += 1
             while vm_user is None:
-                choice = raw_input('Please enter the number of the user [1-%s]: ' % len(all_users))
+                choice = eval(input('Please enter the number of the user [1-%s]: ' % len(all_users)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_users):
                     vm_user = all_users[choice - 1]
@@ -390,7 +387,7 @@ def main():
                 print('%s. L3 - %s' % (index + 1, cur_dom.name))
                 index += 1
             while vm_domain is None:
-                choice = raw_input('Please enter the number of the domain [1-%s]: ' % len(all_dom))
+                choice = eval(input('Please enter the number of the domain [1-%s]: ' % len(all_dom)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_dom):
                     vm_domain = all_dom[choice - 1]
@@ -421,7 +418,7 @@ def main():
                 print('%s. %s' % (index + 1, cur_zone.name))
                 index += 1
             while vm_zone is None:
-                choice = raw_input('Please enter the number of the zone [1-%s]: ' % len(all_zone))
+                choice = eval(input('Please enter the number of the zone [1-%s]: ' % len(all_zone)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_zone):
                     vm_zone = all_zone[choice - 1]
@@ -451,7 +448,7 @@ def main():
                 print('%s. %s - %s/%s' % (index + 1, cur_subnet.name, cur_subnet.address, cur_subnet.netmask))
                 index += 1
             while vm_subnet is None:
-                choice = raw_input('Please enter the number of the subnet [1-%s]: ' % len(all_subnet))
+                choice = eval(input('Please enter the number of the subnet [1-%s]: ' % len(all_subnet)))
                 choice = int(choice)
                 if choice > 0 and choice - 1 < len(all_subnet):
                     vm_subnet = all_subnet[choice - 1]
@@ -479,7 +476,7 @@ def main():
             print(80 * '-')
             print('If you want a static IP, please enter it. Or press enter for a DHCP assigned IP.')
             while vm_ip is None:
-                choice = raw_input('Please enter the IP or press enter for a DHCP assigned IP: ')
+                choice = eval(input('Please enter the IP or press enter for a DHCP assigned IP: '))
                 if not choice or ipaddress.ip_address(choice) in ipaddress.ip_network(
                                 '%s/%s' % (vm_subnet.address, vm_subnet.netmask)):
                     vm_ip = choice
@@ -516,7 +513,7 @@ def main():
                 print('%s. %s' % (index + 1, cur_pg.name))
                 index += 1
             while vm_policy_group is None:
-                choice = raw_input('Please enter the number of the policy group [0-%s]: ' % len(all_pg))
+                choice = eval(input('Please enter the number of the policy group [0-%s]: ' % len(all_pg)))
                 choice = int(choice)
                 if choice == 0:
                     vm_policy_group = None
@@ -559,7 +556,7 @@ def main():
                 print('%s. %s' % (index + 1, cur_rt.name))
                 index += 1
             while vm_redirection_target is None:
-                choice = raw_input('Please enter the number of the redirection target [0-%s]: ' % len(all_rt))
+                choice = eval(input('Please enter the number of the redirection target [0-%s]: ' % len(all_rt)))
                 choice = int(choice)
                 if choice == 0:
                     vm_redirection_target = None
@@ -682,10 +679,10 @@ def main():
             logging.critical('Invalid mode')
             return 1
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         logging.critical('Caught vmodl fault: {0:s}'.format(e.msg))
         return 1
-    except Exception, e:
+    except Exception as e:
         logging.critical('Caught exception: {0:s}'.format(str(e)))
         return 1
 
@@ -695,4 +692,4 @@ def main():
 # Start program
 if __name__ == "__main__":
     main()
-
+ 

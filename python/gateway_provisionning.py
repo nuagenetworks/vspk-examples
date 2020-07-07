@@ -1,7 +1,8 @@
-from vspk.vsdk import v3_2 as vsdk
-
+from __future__ import print_function
 import logging
-from vspk.vsdk.v3_2.utils import set_log_level
+
+from vspk import v6 as vsdk
+from vspk.utils import set_log_level
 
 set_log_level(logging.INFO)
 
@@ -73,7 +74,7 @@ def create_datacenter_gateway(name, system_id, gateway_template, enterprise, vsd
 if __name__ == "__main__":
 
     # start the session
-    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://135.227.222.46:8443')
+    session = vsdk.NUVSDSession(username='csproot', password='csproot', enterprise='csp', api_url='https://localhost:8443')
     session.start()
 
     # get an enterprise
@@ -86,6 +87,6 @@ if __name__ == "__main__":
     gw = create_datacenter_gateway("gateway 1", "id1", gw_tmpl, enterprise, session)
 
     from time import sleep
-    print "Sleeping..."
+    print('Sleeping...')
     sleep(6)
     gw_tmpl.delete()

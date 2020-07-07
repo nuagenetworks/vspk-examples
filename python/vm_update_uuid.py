@@ -7,15 +7,16 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2018-05-13 1.0 Initial version
+2020-07-06 1.1 Migrate to v6 API
 
 --- Usage ---
 run 'python vm_update_uuid.py -h' for an overview
 """
+from builtins import str
 import argparse
 import getpass
 import logging
-import requests
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -25,7 +26,7 @@ def get_args():
 
     parser = argparse.ArgumentParser(description="vm_update_uuid is a tool to update UUID of a VM that was created with split activation.")
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
     parser.add_argument('-E', '--nuage-enterprise', required=True, help='The enterprise with which to connect to the Nuage VSD/SDK host', dest='nuage_enterprise', type=str)
     parser.add_argument('-H', '--nuage-host', required=True, help='The Nuage VSD/SDK endpoint to connect to', dest='nuage_host', type=str)
@@ -57,7 +58,7 @@ def main():
     if args.nuage_password:
         nuage_password = args.nuage_password
     nuage_username = args.nuage_username
-    nosslcheck = args.nosslcheck
+#    nosslcheck = args.nosslcheck
     verbose = args.verbose
     vmid = args.vmid
     uuid = args.uuid
@@ -72,10 +73,6 @@ def main():
 
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
-
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
 
     # Getting user password for Nuage connection
     if nuage_password is None:

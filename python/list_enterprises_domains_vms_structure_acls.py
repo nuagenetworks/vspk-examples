@@ -8,13 +8,14 @@ python list_enterprises_domains_vms_structure_acls.py
 --- Author ---
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 """
-from vspk import v5_0 as vsdk
+from __future__ import print_function
+from vspk import v6 as vsdk
 
 session = vsdk.NUVSDSession(
     username='csproot',
-    password='PASSWORD',
+    password='csproot',
     enterprise='csp',
-    api_url='https://VSD-IP:8443'
+    api_url='https://localhost:8443'
 )
 
 session.start()
@@ -25,13 +26,16 @@ for cur_ent in user.enterprises.get():
     print('VMs inside Enterprise %s' % cur_ent.name)
     for cur_vm in cur_ent.vms.get():
         print('|- %s' % cur_vm.name)
+    print('Containers inside Enterprise %s' % cur_ent.name)
+    for cur_container in cur_ent.containers.get():
+        print('|- %s' % cur_container.name)
 
     print('\nDomains inside Enterprise %s' % cur_ent.name)
     for cur_domain in cur_ent.domains.get():
         print('|- Domain: %s' % cur_domain.name)
         for cur_zone in cur_domain.zones.get():
             print('    |- Zone: %s' % cur_zone.name)
-            for cur_subnet in cur_domain.subnets.get():
+            for cur_subnet in cur_zone.subnets.get():
                 print('        |- Subnets: %s - %s - %s' % (cur_subnet.name, cur_subnet.address, cur_subnet.netmask))
 
         for cur_acl in cur_domain.ingress_acl_templates.get():
