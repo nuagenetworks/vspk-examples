@@ -16,6 +16,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 --- Version history ---
 2016-01-19 - 1.0
 2016-01-19 - 1.1 - Improvements so significant less API calls are made and VM Templates will not cause issues if they have Nuage metadata set (Templates are ignored)
+2020-07-06 - 1.2 - Migrate to v6 API
 
 --- CSV ---
 It requires a mapping file which is a CSV, configured with the following fields (fields with <> surrounding them are mandatory):
@@ -44,6 +45,8 @@ python vcenter_vm_name_to_nuage_policygroups.py -c DC1-Compute -c DC2-Compute -d
 
 """
 
+from builtins import str
+from builtins import next
 import argparse
 import atexit
 import csv
@@ -51,11 +54,10 @@ import getpass
 import logging
 import os.path
 import re
-import requests
 
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -174,16 +176,6 @@ def main():
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    ssl_context = None
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-        import ssl
-        if hasattr(ssl, 'SSLContext'):
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-            ssl_context.verify_mode = ssl.CERT_NONE
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -203,7 +195,7 @@ def main():
             logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
             nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
             nc.start()
-        except IOError, e:
+        except IOError as e:
             pass
 
         if not nc or not nc.is_current_session():
@@ -213,12 +205,12 @@ def main():
         # Connecting to vCenter
         try:
             logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_https_port, vcenter_username))
-            if ssl_context:
-                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port), sslContext=ssl_context)
+            if nosslcheck:
+                vc = SmartConnectNoSSL(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port))
             else:
                 vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port))
 
-        except IOError, e:
+        except IOError as e:
             pass
 
         if not vc:
@@ -230,10 +222,10 @@ def main():
 
         logger.info('Connected to both Nuage & vCenter servers')
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         logger.critical('Caught vmodl fault: %s' % e.msg)
         return 1
-    except Exception, e:
+    except Exception as e:
         logger.critical('Caught exception: %s' % str(e))
         return 1
 
@@ -335,7 +327,7 @@ def main():
             nc_vm_properties['vport'] = vsdk.NUVPort(id=nc_vm_properties['vm_interface'].vport_id)
             try:
                 nc_vm_properties['vport'].fetch()
-            except Exception, e:
+            except Exception as e:
                 logger.error('VM %s with MAC address %s has a vm_interface but no vport in Nuage, this should not be possible... Skipping it' % (vc_vm.name, nc_vm_properties['mac']))
                 continue
 
@@ -343,7 +335,7 @@ def main():
 
             # Checking regex's on VMs
             nc_vm_pgs = []
-            for regex in mapping_list.keys():
+            for regex in list(mapping_list.keys()):
                 logger.debug('Checking regex "%s" on VM %s' % (regex, vc_vm.name))
                 pattern = re.compile(regex)
                 if pattern.match(vc_vm.name):

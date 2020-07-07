@@ -7,15 +7,16 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2017-10-12 - 0.1 - Initial development version
+2020-07-06 - 1.0 - Migrate to v6 API
 
 --- Usage ---
 run 'python vm_add_interface.py -h' for an overview
 """
+from builtins import str
 import argparse
 import getpass
 import logging
-import requests
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -25,7 +26,7 @@ def get_args():
 
     parser = argparse.ArgumentParser(description="vm_add_interface is a tool to add a new interface to a VM inside a Nuage VSP environment.")
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-i', '--ip', required=False, help="IP address of a nic which has to be attached to a Nuage subnet or L2 domain", dest='ips', type=str, action='append')
     parser.add_argument('-l', '--log-file', required=False, help='File to log to (default = stdout)', dest='logfile', type=str)
     parser.add_argument('-m', '--mac', required=True, help="MAC address of a nic which has to be attached to a Nuage subnet or L2 domain", dest='macs', type=str, action='append')
@@ -59,7 +60,7 @@ def main():
     if args.nuage_password:
         nuage_password = args.nuage_password
     nuage_username = args.nuage_username
-    nosslcheck = args.nosslcheck
+#    nosslcheck = args.nosslcheck
     verbose = args.verbose
     ips = []
     if args.ips:
@@ -87,10 +88,6 @@ def main():
     if len(ips) > 0 and len(macs) != len(ips):
         logger.critical('Some IPs are specified, but not the same amount as macs and subnets, which is an invalid configuration.')
         return 1
-
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
 
     # Getting user password for Nuage connection
     if nuage_password is None:

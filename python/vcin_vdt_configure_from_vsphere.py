@@ -105,16 +105,16 @@ python vcin_vdt_configure_from_vsphere.py -d --nuage-enterprise csp --nuage-host
 python vcin_vdt_configure_from_vsphere.py -d --nuage-enterprise csp --nuage-host 10.167.43.52 --nuage-user csproot --nuage-vrs-ovf http://10.167.43.14/VMware-VRS/VRS_3.2.2-74.ovf -S --vcenter-host 10.167.43.24 --vcenter-user root --vcenter-name "Main vCenter" -l /tmp/populate.log --datacenter "Main DC" --cluster DC1-Compute --cluster DC2-Compute --hosts-file samples/hosts-file.csv --hv-user root --hv-management-network Management --hv-data-network "Data Control" --hv-vm-network 1-Compute-OVSPG --hv-mc-network 1-Compute-PG1 --host-configure-agent
 """
 
+from builtins import str
 import argparse
 import atexit
 import csv
 import getpass
 import logging
 import os.path
-import requests
 import socket
 
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
 from vspk import v5_0 as vsdk
 
@@ -525,7 +525,7 @@ def update_host_vm_agent_configuration(logger, vc_cl, vc_host, vc_host_ip, agent
     try:
         agent_config = vim.host.EsxAgentHostManager.ConfigInfo(agentVmDatastore=agent_datastore, agentVmNetwork=agent_portgroup)
         vc_host.configManager.esxAgentHostManager.EsxAgentHostManagerUpdateConfig(configInfo=agent_config)
-    except vim.fault.HostConfigFault, e:
+    except vim.fault.HostConfigFault as e:
         logger.error('FAILED to configure the Agent VM settings for Host %s with IP %s from the vCenter Cluster %s to: datastore %s and port group %s. Exception: %s' % (vc_host.name, vc_host_ip, vc_cl.name, agent_datastore.name, agent_portgroup.name, e.msg))
         return -1
 
@@ -671,16 +671,6 @@ def main():
                 else:
                     logger.warning('Found an invalid IP %s in the hosts file and FQDNs are not allowed, skipping line' % row[0])
 
-    # Disabling SSL verification if set
-    ssl_context = None
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-        import ssl
-        if hasattr(ssl, 'SSLContext'):
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-            ssl_context.verify_mode = ssl.CERT_NONE
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -705,7 +695,7 @@ def main():
             logger.info('Connecting to Nuage server %s:%s with username %s' % (nuage_host, nuage_port, nuage_username))
             nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
             nc.start()
-        except IOError, e:
+        except IOError:
             pass
 
         if not nc or not nc.is_current_session():
@@ -715,12 +705,12 @@ def main():
         # Connecting to vCenter
         try:
             logger.info('Connecting to vCenter server %s:%s with username %s' % (vcenter_host, vcenter_https_port, vcenter_username))
-            if ssl_context:
-                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port), sslContext=ssl_context)
+            if nosslcheck:
+                vc = SmartConnectNoSSL(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port))
             else:
                 vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password, port=int(vcenter_https_port))
 
-        except IOError, e:
+        except IOError:
             pass
 
         if not vc:
@@ -769,10 +759,10 @@ def main():
         logger.info('Completed all tasks.')
         return 0
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         logger.critical('Caught vmodl fault: %s' % e.msg)
         return 1
-    except Exception, e:
+    except Exception as e:
         logger.critical('Caught exception: %s' % str(e))
         return 1
 

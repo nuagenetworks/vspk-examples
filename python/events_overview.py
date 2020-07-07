@@ -7,6 +7,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2016-01-26 - 1.0
+2020-07-06 - 1.1 - Migrated to v6 API
 
 --- Usage ---
 run 'python event_overview.py -h' for an overview
@@ -28,18 +29,21 @@ python event_overview.py -E csp -H 10.167.43.64 -P 443 -p csproot -u csproot -S 
 python event_overview.py -E csp -H 10.167.43.64 -P 443 -p csproot -u csproot -S -e -j
 
 """
+from __future__ import division
+from __future__ import print_function
 
+from builtins import str
+from past.utils import old_div
 import argparse
 import datetime
 import getpass
 import json
 import logging
 import re
-import requests
 import time
 
 from prettytable import PrettyTable
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -47,7 +51,7 @@ def get_args():
     Supports the command-line arguments listed below.
     """
 
-    parser = argparse.ArgumentParser(description="Tool to list all events on the enterpises to which the user has access to.")
+    parser = argparse.ArgumentParser(description="Tool to list all events on the enterprises to which the user has access to.")
     parser.add_argument('-d', '--debug', required=False, help='Enable debug output', dest='debug', action='store_true')
     parser.add_argument('-e', '--extended', required=False, help='Enable extended output', dest='extended', action='store_true')
     parser.add_argument('-j', '--json', required=False, help='Print as JSON, not as a table', dest='json_output', action='store_true')
@@ -57,7 +61,7 @@ def get_args():
     parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
     parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
     parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-t', '--time', required=False, help='Indication of how far back in the past the events list should go. Can be set in seconds, minutes (add m), hours (add h) or days (add d) (examples: 60, 60m, 60h or 60d, default is 3600 seconds)', dest='time_difference', type=str, default='3600')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
@@ -84,7 +88,7 @@ def main():
     if args.nuage_password:
         nuage_password  = args.nuage_password
     nuage_username      = args.nuage_username
-    nosslcheck          = args.nosslcheck
+    #nosslcheck          = args.nosslcheck
     time_difference     = args.time_difference
     verbose             = args.verbose
 
@@ -119,11 +123,6 @@ def main():
 
     logger.debug('Time difference set to %s seconds' % time_diff)
 
-    # Disabling SSL verification if set
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -135,7 +134,7 @@ def main():
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
 
-    except Exception, e:
+    except Exception as e:
         logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
         logger.critical('Caught exception: %s' % str(e))
         return 1
@@ -157,7 +156,7 @@ def main():
         logger.debug('Gathering events for enterprise %s' % ent.name)
         for event in ent.event_logs.get(filter="eventReceivedTime >= '%s'" % int(unix_check_time * 1000)):
             logger.debug('Found event of type %s with timestamp %s' % (event.type, event.event_received_time))
-            clean_time = datetime.datetime.fromtimestamp(int(event.event_received_time / 1000)).strftime('%Y-%m-%d %H:%M:%S')
+            clean_time = datetime.datetime.fromtimestamp(int(old_div(event.event_received_time, 1000))).strftime('%Y-%m-%d %H:%M:%S')
 
             if json_output:
                 json_dict = {
@@ -178,9 +177,9 @@ def main():
 
     logger.debug('Printing output')
     if json_output:
-        print json.dumps(json_object, sort_keys=True, indent=4)
+        print(json.dumps(json_object, sort_keys=True, indent=4))
     else:
-        print pt.get_string(sortby='Timestamp')
+        print(pt.get_string(sortby='Timestamp'))
 
     return 0
 

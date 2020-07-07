@@ -1,7 +1,10 @@
-from vspk import v5_0 as vspk
+from __future__ import print_function
+from builtins import str
 import argparse
 import logging
 import requests
+
+from vspk import v6 as vspk
 
 def get_args():
     """
@@ -16,7 +19,7 @@ def get_args():
     parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
     parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, defualt will be used', dest='nuage_password', type=str)
     parser.add_argument('-u', '--nuage-user', required=False, help='The username with which to connect to the Nuage VSD/SDK host. If not specified, defualt will be used', dest='nuage_username', type=str)
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
@@ -47,7 +50,7 @@ if args.logfile:
     log_file     = args.logfile
 else:
     log_file     = None
-nosslcheck       = args.nosslcheck
+#nosslcheck       = args.nosslcheck
 verbose          = args.verbose
 
 # Logging settings
@@ -59,11 +62,6 @@ else:
     log_level = logging.WARNING
 logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
 logger = logging.getLogger(__name__)
-
-# Disabling SSL verification if set
-if nosslcheck:
-    logger.debug('Disabling SSL certificate verification.')
-    requests.packages.urllib3.disable_warnings()
 
 # Getting username for Nuage connection
 if args.nuage_username is None:
@@ -104,7 +102,7 @@ try:
                            api_url="https://{0}:{1}".format(nuage_host,nuage_port))
     nc.start()
     nuage_user = nc.user
-except Exception, e:
+except Exceptione as e:
     logger.error(
         'Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
     logger.critical('Caught exception: %s' % str(e))

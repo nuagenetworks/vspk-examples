@@ -17,6 +17,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2016-10-16 - 1.0
+2020-07-06 - 1.1 - Migrate to v6 API
 
 --- CSV ---
 It requires a mapping file which is a CSV, configured with the following fields (fields with <> surrounding
@@ -46,6 +47,7 @@ python vcenter_vm_os_to_nuage_policygroups.py -c DC1-Compute -c DC2-Compute -d -
 
 """
 
+from builtins import next
 import argparse
 import atexit
 import csv
@@ -55,9 +57,9 @@ import os.path
 import re
 import requests
 
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 from bambou.exceptions import BambouHTTPError
 
 
@@ -140,12 +142,12 @@ def update_nuage_policy_group(logger, nc, nc_vm_properties, nc_vm_pgs, remove_po
     pg_change = False
     for nc_pg_name in nc_vm_pgs:
         # Getting the policy group which matches the required one
-        logger.debug('Looking for Policy Group {0:s} in domain {0:s} for VM {1:s}'.format(nc_pg_name, nc_vm_properties[
+        logger.debug('Looking for Policy Group {0:s} in domain {1:s} for VM {2:s}'.format(nc_pg_name, nc_vm_properties[
             'nuage.domain'], nc_vm_properties['name']))
         nc_vm_pg = nc_domain.policy_groups.get_first(filter="name == '{0:s}'".format(nc_pg_name))
         if nc_vm_pg is None:
             logger.error(
-                'Policy Group {0:s} can not be found in domain {0:s} for VM {1:s}, skipping it'.format(nc_pg_name,
+                'Policy Group {0:s} can not be found in domain {1:s} for VM {2:s}, skipping it'.format(nc_pg_name,
                                                                                                        nc_vm_properties[
                                                                                                            'nuage.domain'],
                                                                                                        nc_vm_properties[
@@ -211,16 +213,6 @@ def main():
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    ssl_context = None
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-        import ssl
-        if hasattr(ssl, 'SSLContext'):
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-            ssl_context.verify_mode = ssl.CERT_NONE
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -257,9 +249,9 @@ def main():
             logger.info(
                 'Connecting to vCenter server {0:s}:{1:d} with username {2:s}'.format(vcenter_host, vcenter_https_port,
                                                                                       vcenter_username))
-            if ssl_context:
-                vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password,
-                                  port=int(vcenter_https_port), sslContext=ssl_context)
+            if nosslcheck:
+                vc = SmartConnectNoSSL(host=vcenter_host, user=vcenter_username, pwd=vcenter_password,
+                                  port=int(vcenter_https_port))
             else:
                 vc = SmartConnect(host=vcenter_host, user=vcenter_username, pwd=vcenter_password,
                                   port=int(vcenter_https_port))
@@ -278,7 +270,7 @@ def main():
 
         logger.info('Connected to both Nuage & vCenter servers')
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         logger.critical('Caught vmodl fault: {0:s}'.format(e.msg))
         return 1
 
@@ -401,7 +393,7 @@ def main():
 
             # Checking regex's on VMs
             nc_vm_pgs = []
-            for regex in mapping_list.keys():
+            for regex in list(mapping_list.keys()):
                 logger.debug('Checking regex "{0:s}" on VM {1:s} with OS {2:s}'.format(regex, nc_vm_properties['name'],
                                                                                        nc_vm_properties['os']))
                 pattern = re.compile(regex)

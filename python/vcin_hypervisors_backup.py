@@ -62,6 +62,7 @@ A CSV file for each vCenter will be created as a backup of the information in VC
 --- Version history ---
 2016-10-12 - 1.0 - Initial release
 2016-10-13 - 1.1 - Updated to support Generic split activation.
+2020-07-06 - 1.2 - Migrate to v6 API
 
 --- Usage ---
 Run 'python vcin_hypervisors_backup.py -h' for an overview
@@ -76,9 +77,8 @@ import csv
 import getpass
 import logging
 import os.path
-import requests
 
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -95,7 +95,7 @@ def get_args():
     parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
     parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
     parser.add_argument('-o', '--output-folder', required=True, help='The folder to where to write the output to, a file per vCenter will be created', dest='output_folder', type=str)
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
@@ -119,7 +119,7 @@ def main():
         nuage_password = args.nuage_password
     nuage_username = args.nuage_username
     output_folder = args.output_folder
-    nosslcheck = args.nosslcheck
+#    nosslcheck = args.nosslcheck
     verbose = args.verbose
     # Logging settings
     if debug:
@@ -138,12 +138,6 @@ def main():
         logger.critical('Folder {0:s} is not writable, exiting.'.format(output_folder))
         return 1
 
-    # Disabling SSL verification if set
-    ssl_context = None
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -158,7 +152,7 @@ def main():
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise,
                                api_url="https://{0:s}:{1:d}".format(nuage_host, nuage_port))
         nc.start()
-    except IOError, e:
+    except IOError:
         pass
 
     if not nc or not nc.is_current_session():

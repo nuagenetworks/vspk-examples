@@ -1,4 +1,4 @@
-from vspk.v5_0 import *
+from vspk import v6 as vsdk
 import logging
 import argparse
 import re
@@ -14,7 +14,7 @@ def replace_interfaces(logger, entity):
         if getattr(entity, field):
             orig_content = getattr(entity, field)
             logger.debug("Found value %s for field %s for entity %s" % (orig_content, field, entity.name))
-            pattern = re.compile('|'.join(interface_replacements.keys()))
+            pattern = re.compile('|'.join(list(interface_replacements.keys())))
             new_content = pattern.sub(lambda x: interface_replacements[x.group()], orig_content)
             if orig_content != new_content:
                 logger.info("Replacing entity %s field %s content %s with new content %s" % (entity.name, field, orig_content, new_content))
@@ -56,9 +56,9 @@ def main():
     # Connecting to Nuage
     try:
         logger.info('Connecting to Nuage server %s as csproot' % ip)
-        nc = NUVSDSession(username=u'csproot', password=u'csproot', enterprise=u'csp', api_url=u'https://%s:8443' % ip)
+        nc = vsdk.NUVSDSession(username=u'csproot', password=u'csproot', enterprise=u'csp', api_url=u'https://%s:8443' % ip)
         nc.start()
-    except IOError, e:
+    except IOError:
         pass
 
     if not nc or not nc.is_current_session():

@@ -17,7 +17,8 @@ python multi-vsd_list_enterprises_domains_vms_structure_acls.py
 --- Author ---
 Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 """
-from vspk import v5_0 as vsdk
+from __future__ import print_function
+from vspk import v6 as vsdk
 import sys
 print(sys.version)
 

@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
-import sys
 import logging
-sys.path.append("./")
 
 from time import sleep
-
-from vspk.v5_0 import *
+from vspk import v6 as vsdk
 from vspk.utils import set_log_level
 
 set_log_level(logging.ERROR)
@@ -26,7 +21,7 @@ if __name__ == '__main__':
     sys.setrecursionlimit(50)
 
     # create a user session for user csproot
-    session = NUVSDSession(username="csproot", password="csproot", enterprise="csp", api_url="https://localhost:8443")
+    session = vsdk.NUVSDSession(username="csproot", password="csproot", enterprise="csp", api_url="https://localhost:8443")
 
     # start the session
     # now session contains a push center and the connected user

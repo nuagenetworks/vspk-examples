@@ -14,19 +14,21 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 
 --- Version history ---
 2017-05-02 - 1.0.0 - First stable release
+2020-07-06 - 1.1.0 - Migrate to v6 API
 
  --- Usage ---
 run 'shared_domain_vports_acl_analytics.py -h' for an overview
 """
+from __future__ import print_function
 
+from builtins import str
 import argparse
 import getpass
 import json
 import logging
-import requests
 
 from prettytable import PrettyTable
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 ether_types = {
     '0x0800': 'IPv4',
@@ -154,7 +156,6 @@ protocols = {
     '81': 'VMTP',
     '82': 'SECURE-VMTP',
     '83': 'VINES',
-    '84': 'TTP',
     '84': 'IPTM',
     '85': 'NSFNET-IGP',
     '86': 'DGP',
@@ -245,10 +246,10 @@ def handle_output(output):
     """
     global output_parser
 
-    if output['Ether type'] in ether_types.keys():
+    if output['Ether type'] in list(ether_types.keys()):
         output['Ether type'] = ether_types[output['Ether type']]
 
-    if output['Protocol'] in protocols.keys():
+    if output['Protocol'] in list(protocols.keys()):
         output['Protocol'] = protocols[output['Protocol']]
 
     if output['Source type'] == 'ANY':
@@ -259,7 +260,7 @@ def handle_output(output):
 
     if not configuration['json_output']:
         # Cleanup None values
-        for key in output.keys():
+        for key in list(output.keys()):
             if output[key] is None:
                 output[key] = ''
 
@@ -483,11 +484,6 @@ def main():
     logging.basicConfig(filename=configuration['log_file'], format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    #if configuration['nosslcheck']:
-    #    logger.debug('Disabling SSL certificate verification.')
-    #    requests.packages.urllib3.disable_warnings()
-
     # Getting user password for Nuage connection
     if configuration['nuage_password'] is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -499,7 +495,7 @@ def main():
         nc = vsdk.NUVSDSession(username=configuration['nuage_username'], password=configuration['nuage_password'], enterprise=configuration['nuage_enterprise'], api_url="https://%s:%s" % (configuration['nuage_host'], configuration['nuage_port']))
         nc.start()
 
-    except Exception, e:
+    except Exception as e:
         logger.error('Could not connect to Nuage host %s with user %s and specified password' % (configuration['nuage_host'], configuration['nuage_username']))
         logger.critical('Caught exception: %s' % str(e))
         return 1
@@ -559,9 +555,9 @@ def main():
 
     logger.debug('Printing output')
     if configuration['json_output']:
-        print json.dumps(output_parser, sort_keys=True, indent=4)
+        print(json.dumps(output_parser, sort_keys=True, indent=4))
     else:
-        print output_parser.get_string()
+        print(output_parser.get_string())
 
     return 0
 

@@ -43,16 +43,18 @@ http://github.com/nuagenetworks/vspk-examples/blob/master/docs/nuage_acl_learner
 python nuage_acl_learner.py -d -D "Main Customer Domain" -E csp -H 10.167.43.64 -P 443 -p csproot -u csproot -S -t POLICYGROUP
 """
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 import argparse
 import getpass
 import logging
 import re
-import requests
 import string
-import SocketServer
+import socketserver
 import time
 
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 # Global variables
 nc = None
@@ -71,7 +73,7 @@ ip_regex = re.compile('.*dir: (\w+).*ipv4\(src=([\d\.]+)[^,]*,dst=([\d\.]+)[^,]*
 traffic_regex = re.compile('.*(tcp|udp)\(src=(\d+)[^,]*,dst=(\d+)[^\)]*\).*')
 
 
-class ACLTCPHandler(SocketServer.StreamRequestHandler):
+class ACLTCPHandler(socketserver.StreamRequestHandler):
     """
     Will handle ACL log messages and create appropriate ACLs
     """
@@ -221,7 +223,7 @@ class ACLTCPHandler(SocketServer.StreamRequestHandler):
         )
 
         # For now we work without jobs, way easier...
-        ingress_learning_acl.create_child(ingress_acl_entry, async=False)
+        ingress_learning_acl.create_child(ingress_acl_entry, as_async=False)
 
         flows[flow_id] = {
             'action': 'FORWARD',
@@ -258,7 +260,7 @@ def get_args():
     parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
     parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
     parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-s', '--strict-source-ports', required=False, help='Use strict source ports, this will set the specific source port instead of the default * setting for Ingress rules.', dest='strictsource', action='store_true')
     parser.add_argument('-t', '--type', required=True, help='On what entity type should the ACLs be applied. Valid responses: POLICYGROUP, ZONE, SUBNET', dest='acl_type', type=str, choices=['POLICYGROUP', 'ZONE', 'SUBNET'])
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
@@ -318,11 +320,6 @@ def main():
     logging.basicConfig(filename=configuration['log_file'], format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    if configuration['nosslcheck']:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-
     # Getting user password for Nuage connection
     if configuration['nuage_password'] is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -334,7 +331,7 @@ def main():
         nc = vsdk.NUVSDSession(username=configuration['nuage_username'], password=configuration['nuage_password'], enterprise=configuration['nuage_enterprise'], api_url="https://%s:%s" % (configuration['nuage_host'], configuration['nuage_port']))
         nc.start()
 
-    except Exception, e:
+    except Exception as e:
         logger.error('Could not connect to Nuage host %s with user %s and specified password' % (configuration['nuage_host'], configuration['nuage_username']))
         logger.critical('Caught exception: %s' % str(e))
         return 1
@@ -416,7 +413,7 @@ def main():
             allow_l2_address_spoof=False,
             active=True
         )
-        nc_domain.create_child(ingress_learning_acl, async=False)
+        nc_domain.create_child(ingress_learning_acl, as_async=False)
         logger.debug('Creating Ingress ACL TCP rule')
         ingress_acl_entry_1 = vsdk.NUIngressACLEntryTemplate(
             action='FORWARD',
@@ -432,7 +429,7 @@ def main():
             destination_port='*',
             dscp='*'
         )
-        ingress_learning_acl.create_child(ingress_acl_entry_1, async=False)
+        ingress_learning_acl.create_child(ingress_acl_entry_1, as_async=False)
         logger.debug('Creating Ingress ACL UDP rule')
         ingress_acl_entry_2 = vsdk.NUIngressACLEntryTemplate(
             action='FORWARD',
@@ -448,7 +445,7 @@ def main():
             destination_port='*',
             dscp='*'
         )
-        ingress_learning_acl.create_child(ingress_acl_entry_2, async=False)
+        ingress_learning_acl.create_child(ingress_acl_entry_2, as_async=False)
         logger.debug('Creating Ingress ACL other rule')
         ingress_acl_entry_3 = vsdk.NUIngressACLEntryTemplate(
             action='FORWARD',
@@ -463,7 +460,7 @@ def main():
             destination_port=None,
             dscp='*'
         )
-        ingress_learning_acl.create_child(ingress_acl_entry_3, async=False)
+        ingress_learning_acl.create_child(ingress_acl_entry_3, as_async=False)
         logger.info('Ingress ACL rules created')
 
     if egress_learning_acl is None:
@@ -477,7 +474,7 @@ def main():
             default_install_acl_implicit_rules=True,
             active=True
         )
-        nc_domain.create_child(egress_learning_acl, async=False)
+        nc_domain.create_child(egress_learning_acl, as_async=False)
         logger.debug('Creating Egress ACL TCP rule')
         egress_acl_entry_1 = vsdk.NUEgressACLEntryTemplate(
             action='FORWARD',
@@ -493,7 +490,7 @@ def main():
             destination_port='*',
             dscp='*'
         )
-        egress_learning_acl.create_child(egress_acl_entry_1, async=False)
+        egress_learning_acl.create_child(egress_acl_entry_1, as_async=False)
         logger.debug('Creating Egress ACL UDP rule')
         egress_acl_entry_2 = vsdk.NUEgressACLEntryTemplate(
             action='FORWARD',
@@ -509,7 +506,7 @@ def main():
             destination_port='*',
             dscp='*'
         )
-        egress_learning_acl.create_child(egress_acl_entry_2, async=False)
+        egress_learning_acl.create_child(egress_acl_entry_2, as_async=False)
         logger.debug('Creating Egress ACL other rule')
         egress_acl_entry_3 = vsdk.NUEgressACLEntryTemplate(
             action='FORWARD',
@@ -524,13 +521,13 @@ def main():
             destination_port=None,
             dscp='*'
         )
-        egress_learning_acl.create_child(egress_acl_entry_3, async=False)
+        egress_learning_acl.create_child(egress_acl_entry_3, as_async=False)
         logger.info('Egress ACL rules created')
 
     logger.info('Starting capture server on port 514')
-    capture_server = SocketServer.TCPServer(('0.0.0.0', 514), ACLTCPHandler)
+    capture_server = socketserver.TCPServer(('0.0.0.0', 514), ACLTCPHandler)
 
-    try:
+    try: 
         # Activate the server; this will keep running until you
         # interrupt the program with Ctrl-C
         capture_server.serve_forever()

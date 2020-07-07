@@ -8,6 +8,7 @@ Philippe Dellaert <philippe.dellaert@nuagenetworks.net>
 --- Version history ---
 2016-01-24 - 1.0
 2016-01-26 - 1.1 - JSON output supported
+2020-07-06 - 1.2 - Migrated to v6 API
 
 --- Usage ---
 run 'python fip_overview.py -h' for an overview
@@ -19,15 +20,16 @@ http://github.com/nuagenetworks/vspk-examples/blob/master/docs/fip_overview.md
 python fip_overview.py -E csp -H 10.167.43.64 -P 443 -p csproot -u csproot -S
 
 """
+from __future__ import print_function
 
+from builtins import str
 import argparse
 import getpass
 import json
 import logging
-import requests
 
 from prettytable import PrettyTable
-from vspk import v5_0 as vsdk
+from vspk import v6 as vsdk
 
 
 def get_args():
@@ -44,7 +46,7 @@ def get_args():
     parser.add_argument('-P', '--nuage-port', required=False, help='The Nuage VSD/SDK server port to connect to (default = 8443)', dest='nuage_port', type=int, default=8443)
     parser.add_argument('-p', '--nuage-password', required=False, help='The password with which to connect to the Nuage VSD/SDK host. If not specified, the user is prompted at runtime for a password', dest='nuage_password', type=str)
     parser.add_argument('-u', '--nuage-user', required=True, help='The username with which to connect to the Nuage VSD/SDK host', dest='nuage_username', type=str)
-    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect', dest='nosslcheck', action='store_true')
+    parser.add_argument('-S', '--disable-SSL-certificate-verification', required=False, help='Disable SSL certificate verification on connect (deprecated)', dest='nosslcheck', action='store_true')
     parser.add_argument('-v', '--verbose', required=False, help='Enable verbose output', dest='verbose', action='store_true')
     args = parser.parse_args()
     return args
@@ -69,7 +71,7 @@ def main():
     if args.nuage_password:
         nuage_password  = args.nuage_password
     nuage_username      = args.nuage_username
-    nosslcheck          = args.nosslcheck
+    # nosslcheck          = args.nosslcheck
     verbose             = args.verbose
 
     # Logging settings
@@ -83,11 +85,6 @@ def main():
     logging.basicConfig(filename=log_file, format='%(asctime)s %(levelname)s %(message)s', level=log_level)
     logger = logging.getLogger(__name__)
 
-    # Disabling SSL verification if set
-    if nosslcheck:
-        logger.debug('Disabling SSL certificate verification.')
-        requests.packages.urllib3.disable_warnings()
-
     # Getting user password for Nuage connection
     if nuage_password is None:
         logger.debug('No command line Nuage password received, requesting Nuage password from user')
@@ -99,7 +96,7 @@ def main():
         nc = vsdk.NUVSDSession(username=nuage_username, password=nuage_password, enterprise=nuage_enterprise, api_url="https://%s:%s" % (nuage_host, nuage_port))
         nc.start()
 
-    except Exception, e:
+    except Exception as e:
         logger.error('Could not connect to Nuage host %s with user %s and specified password' % (nuage_host, nuage_username))
         logger.critical('Caught exception: %s' % str(e))
         return 1
@@ -133,9 +130,9 @@ def main():
             pt.add_row([nc_vm.enterprise_name, nc_interface.domain_name, nc_vm.name, nc_interface.ip_address, nc_interface.mac, nc_fip.address])
 
     if json_output:
-        print json.dumps(json_object, sort_keys=True, indent=4)
+        print(json.dumps(json_object, sort_keys=True, indent=4))
     else:
-        print pt
+        print(pt)
 
     return 0
 
