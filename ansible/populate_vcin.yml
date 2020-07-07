@@ -10,7 +10,7 @@
       api_password: csproot
       api_enterprise: csp
       api_url: https://localhost:8443
-      api_version: v5_0
+      api_version: v6
     customized_script_url: http://10.189.1.254/scripts/vrs-boot.sh
     ovf_url: http://10.189.1.254/images/5.1.2/Nuage-VRS-5.1.2-80.ovf
 

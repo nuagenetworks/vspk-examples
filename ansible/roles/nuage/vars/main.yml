@@ -6,4 +6,4 @@ nuage_auth:
   api_password: csproot
   api_enterprise: csp
   api_url: https://localhost:8443
-  api_version: v5_0
+  api_version: v6
